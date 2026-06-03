@@ -168,7 +168,7 @@ export default function Dashboard() {
       </div>
 
       {activeTab === 'population' && (
-        <div className="view active" id="view-population" style={{ display: 'grid' }}>
+        <div className="view active" id="view-population">
           <Card id="card-causes" label="Структура" title="Причины инвалидности" detailsContent={<BlockDetail block="causes" />}>
             <CausesChart />
           </Card>
@@ -187,7 +187,7 @@ export default function Dashboard() {
       )}
 
       {activeTab === 'exam' && (
-        <div className="view active" id="view-exam" style={{ display: 'grid' }}>
+        <div className="view active" id="view-exam">
           <Card id="card-primary" label="Экспертиза" title="Освидетельствование" detailsContent={<BlockDetail block="primary" />}>
             <PrimaryStats />
           </Card>
@@ -207,7 +207,7 @@ export default function Dashboard() {
       )}
 
       {activeTab === 'tsr' && (
-        <div className="view active" id="view-tsr" style={{ display: 'grid' }}>
+        <div className="view active" id="view-tsr">
           <Card id="card-budget" label="Бюджет" title="Объем финансирования" detailsContent={<BlockDetail block="budget" />}>
             <BudgetGauge />
           </Card>
