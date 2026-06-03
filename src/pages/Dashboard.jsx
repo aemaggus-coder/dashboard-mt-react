@@ -42,17 +42,54 @@ export default function Dashboard() {
     let data = [];
 
     if (activeTab === 'population') {
-      const current = Math.round(BASE.total * sf);
-      const previous = Math.round(PREV_POP.total * sf);
-      const trend = ((current - previous) / previous * 100).toFixed(1);
+      // Общая численность
+      const total = Math.round(BASE.total * sf);
+      const prevTotal = Math.round(PREV_POP.total * sf);
+      const totalTrend = ((total - prevTotal) / prevTotal * 100).toFixed(1);
+
+      // Взрослые
+      const adults = Math.round(BASE.adults * sf);
+      const prevAdults = Math.round(PREV_POP.total * 0.995 * sf); // примерно 99.5% взрослых
+      const adultsTrend = ((adults - prevAdults) / prevAdults * 100).toFixed(1);
+
+      // Дети
+      const children = Math.round(BASE.children * sf);
+      const prevChildren = Math.round(PREV_POP.ch * sf);
+      const childrenTrend = ((children - prevChildren) / prevChildren * 100).toFixed(1);
+
+      // СВО/Ветераны
+      const veterans = Math.round(BASE.veterans * sf);
 
       data = [
         {
-          label: 'Численность инвалидов',
-          value: current,
+          label: 'Общая численность',
+          value: total,
           status: 'ok',
-          trend: trend,
-          trendIsGood: trend > 0,
+          note: 'по реестру',
+          trend: totalTrend,
+          trendIsGood: totalTrend > 0,
+        },
+        {
+          label: 'Взрослые',
+          value: Math.round(adults / 1000),
+          status: 'ok',
+          note: 'в тыс. человек',
+          trend: adultsTrend,
+          trendIsGood: adultsTrend > 0,
+        },
+        {
+          label: 'Дети-инвалиды',
+          value: children,
+          status: 'ok',
+          note: 'отдельный контроль',
+          trend: childrenTrend,
+          trendIsGood: childrenTrend > 0,
+        },
+        {
+          label: 'СВО / Ветераны',
+          value: veterans,
+          status: 'ok',
+          note: 'по причине инвалидности',
         },
       ];
     } else if (activeTab === 'exam') {

@@ -1,5 +1,8 @@
 export const BASE = {
   total: 2170900,
+  adults: 2160000,
+  children: 670000,
+  veterans: 629561,
   causes: [
     { name: 'Общее заболевание', value: 36, color: '#2563eb' },
     { name: 'Ветераны', value: 29, color: '#f59e0b' },
