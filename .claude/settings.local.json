@@ -4,7 +4,8 @@
       "Bash(ls -la /Users/magomed/Documents/dashboard-mt.backup/)",
       "Read(//Users/magomed/Documents/dashboard-mt.backup/**)",
       "Bash(find /Users/magomed/Documents/dashboard-mt.backup -type f -name \"*.html\" -o -name \"*.js\" -o -name \"*.css\" | head -30)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git commit -m 'Fix navigation from home page to dashboard *)"
     ]
   }
 }

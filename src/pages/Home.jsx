@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
 
 const CENTERS = [
@@ -195,13 +195,9 @@ export default function Home() {
               marginBottom: '40px'
             }}>
               {CENTERS.map((center, idx) => (
-                <Link
+                <div
                   key={idx}
-                  to={center.href || '#'}
-                  style={{ textDecoration: 'none' }}
-                  onClick={(e) => !center.href && e.preventDefault()}
-                >
-                  <div style={{
+                  style={{
                     width: '445px',
                     height: '145px',
                     padding: '16px',
@@ -211,60 +207,65 @@ export default function Home() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    cursor: 'pointer',
+                    cursor: center.href ? 'pointer' : 'default',
                     transition: 'all 0.2s',
                     boxShadow: center.active ? '0 0 0 1.5px #3F7BFF' : 'none',
                     position: 'relative'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,.12)';
+                    if (center.href) {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,.12)';
+                    }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = center.active ? '0 0 0 1.5px #3F7BFF' : 'none';
                   }}
-                  >
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      color: '#0f172a',
-                      lineHeight: '1.4',
-                      fontFamily: 'Manrope, sans-serif'
-                    }}>
-                      {center.title}
-                    </div>
-                    <button
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: '#3F7BFF',
-                        color: '#fff',
-                        fontSize: '18px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        alignSelf: 'flex-start'
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        center.href && navigate(center.href);
-                      }}
-                      onMouseEnter={(e) => {
+                >
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    color: '#0f172a',
+                    lineHeight: '1.4',
+                    fontFamily: 'Manrope, sans-serif'
+                  }}>
+                    {center.title}
+                  </div>
+                  <button
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: center.href ? '#3F7BFF' : '#cbd5e1',
+                      color: '#fff',
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      cursor: center.href ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s',
+                      alignSelf: 'flex-start'
+                    }}
+                    disabled={!center.href}
+                    onClick={() => {
+                      if (center.href) {
+                        navigate(center.href);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      if (center.href) {
                         e.currentTarget.style.background = '#2563eb';
                         e.currentTarget.style.transform = 'scale(1.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#3F7BFF';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      →
-                    </button>
-                  </div>
-                </Link>
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = center.href ? '#3F7BFF' : '#cbd5e1';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    →
+                  </button>
+                </div>
               ))}
             </div>
             </div>
