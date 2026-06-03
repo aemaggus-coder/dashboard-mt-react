@@ -195,8 +195,27 @@ export function applyScaleToObject(obj, scale, keys = []) {
   return result;
 }
 
+// jitter() - add random ±0.7% variation to value for realism
 export function jitter(value, variation = 0.007) {
   if (typeof value !== 'number') return value;
   const factor = 1 + (Math.random() - 0.5) * variation;
   return Math.round(value * factor);
+}
+
+// applyJitterToData() - recursively apply jitter to all numeric values
+export function applyJitterToData(obj, variation = 0.007) {
+  if (typeof obj === 'number') {
+    return jitter(obj, variation);
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => applyJitterToData(item, variation));
+  }
+  if (typeof obj === 'object' && obj !== null) {
+    const result = { ...obj };
+    Object.keys(result).forEach(key => {
+      result[key] = applyJitterToData(result[key], variation);
+    });
+    return result;
+  }
+  return obj;
 }

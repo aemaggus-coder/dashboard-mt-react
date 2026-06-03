@@ -138,13 +138,19 @@ export default function Dashboard() {
     setKpiData(data);
   }, [activeTab, sf, period]);
 
-  // Live data refresh every 5 seconds
+  // Live data refresh every 5 seconds with jitter()
   useEffect(() => {
     const interval = setInterval(() => {
-      setKpiData(prev => prev.map(kpi => ({
-        ...kpi,
-        value: Math.round(kpi.value * (1 + (Math.random() - 0.5) * 0.002))
-      })));
+      setKpiData(prev => prev.map(kpi => {
+        // jitter() - add ±0.7% random variation for realism
+        const jitteredValue = typeof kpi.value === 'number'
+          ? Math.round(kpi.value * (1 + (Math.random() - 0.5) * 0.007))
+          : kpi.value;
+        return {
+          ...kpi,
+          value: jitteredValue
+        };
+      }));
     }, 5000);
     return () => clearInterval(interval);
   }, []);

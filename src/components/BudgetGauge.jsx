@@ -1,5 +1,6 @@
 import { useStore } from '../hooks/useStore';
 import { useScaledData } from '../hooks/useScaledData';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { BASE } from '../lib/constants';
 
 export default function BudgetGauge() {
@@ -10,9 +11,12 @@ export default function BudgetGauge() {
   const remaining = allocated - used;
   const percent = Math.round((used / allocated) * 100);
 
+  // animNum() - animate percentage
+  const animPercent = useAnimatedNumber(percent, 600);
+
   return (
     <div className="gauge-wrap">
-      <div className="gauge-pct">{percent}%</div>
+      <div className="gauge-pct">{Math.round(animPercent)}%</div>
       <div className="gauge-sub">Использовано бюджета</div>
       <div className="budget-stats">
         <div className="budget-stat b-alloc">

@@ -1,10 +1,14 @@
 import { useStore } from '../hooks/useStore';
+import { useAnimatedDecimal } from '../hooks/useAnimatedNumber';
 import { BASE } from '../lib/constants';
 
 export default function TermsStats() {
   const { period } = useStore();
   const data = BASE.exam[period] || BASE.exam.ytd;
   const terms = data?.terms || 21.4;
+
+  // animDec1() - animate terms with 1 decimal place
+  const animTerms = useAnimatedDecimal(terms, 600);
 
   const status = terms < 20 ? 'fast' : terms < 30 ? 'ok' : 'slow';
   const statusLabel = status === 'fast' ? 'Быстро' : status === 'ok' ? 'В норме' : 'Задержка';
@@ -13,7 +17,7 @@ export default function TermsStats() {
   return (
     <div className="terms-body">
       <div className="terms-hero">
-        <div className="terms-hero-num">{terms.toFixed(1)}</div>
+        <div className="terms-hero-num">{animTerms.toFixed(1)}</div>
         <div className="terms-hero-unit">дней</div>
         <div className="terms-badge" style={{ background: statusColor, color: '#fff' }}>
           {statusLabel}
