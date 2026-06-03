@@ -36,61 +36,94 @@ export default function Dashboard() {
   const sf = useSF();
   const [kpiData, setKpiData] = useState([]);
 
-  // Dynamically render KPI based on active tab and scale factor
+  // renderKPI() - Dynamically render KPI based on active tab and scale factor
   useEffect(() => {
     let data = [];
 
     if (activeTab === 'population') {
+      const current = Math.round(BASE.total * sf);
+      const previous = Math.round(PREV_POP.total * sf);
+      const trend = ((current - previous) / previous * 100).toFixed(1);
+
       data = [
         {
           label: 'Численность инвалидов',
-          value: Math.round(BASE.total * sf),
+          value: current,
           status: 'ok',
+          trend: trend,
+          trendIsGood: trend > 0,
         },
       ];
     } else if (activeTab === 'exam') {
       const examData = BASE.exam[period] || BASE.exam.ytd;
+      const prevData = PREV_EXAM[period] || PREV_EXAM.ytd;
       const primary = Math.round((examData?.primary || 0) * sf);
       const reexam = Math.round((examData?.reexam || 0) * sf);
       const total = primary + reexam;
+      const prevTotal = Math.round((prevData?.tx || 0) * sf);
+      const examTrend = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100).toFixed(1) : '0';
+
+      const terms = examData?.terms || 21.4;
+      const prevTerms = prevData?.terms || 22.1;
+      const termsTrend = ((terms - prevTerms) / prevTerms * 100).toFixed(1);
+
+      const appealRate = ((examData?.appealMain || 0) + (examData?.appealFed || 0)) / ((examData?.primary || 0) + (examData?.reexam || 0)) * 100;
+      const prevAppealRate = (prevData?.ar || 5.8);
+      const appealTrend = ((appealRate - prevAppealRate) / prevAppealRate * 100).toFixed(1);
 
       data = [
         {
           label: 'Освидетельствовано',
           value: total,
           status: total > 200000 ? 'ok' : 'warning',
+          trend: examTrend,
+          trendIsGood: examTrend > 0,
         },
         {
           label: 'Средний срок рассмотрения',
-          value: examData?.terms || 21.4,
-          status: (examData?.terms || 21.4) < 30 ? 'ok' : 'warning',
+          value: terms,
+          status: terms < 30 ? 'ok' : 'warning',
           note: 'дней',
+          trend: termsTrend,
+          trendIsGood: termsTrend < 0,
         },
         {
           label: 'Уровень обжалований',
-          value: (((examData?.appealMain || 0) + (examData?.appealFed || 0)) / ((examData?.primary || 0) + (examData?.reexam || 0)) * 100).toFixed(1),
+          value: appealRate.toFixed(1),
           status: 'ok',
           note: '%',
+          trend: appealTrend,
+          trendIsGood: appealTrend < 0,
         },
       ];
     } else if (activeTab === 'tsr') {
       const tsrData = BASE.tsr[period] || BASE.tsr.ytd;
+      const prevData = PREV_TSR[period] || PREV_TSR.ytd;
       const issued = Math.round(((tsrData?.issuedNat || 0) + (tsrData?.issuedCert || 0)) * sf);
+      const prevIssued = Math.round((prevData?.iss || 0) * sf);
+      const issueTrend = prevIssued > 0 ? ((issued - prevIssued) / prevIssued * 100).toFixed(1) : '0';
+
       const budgetUsed = Math.round((tsrData?.budgetUsed || 0) * sf);
       const budgetTotal = Math.round((tsrData?.budgetTotal || 0) * sf);
       const utilization = budgetTotal > 0 ? Math.round((budgetUsed / budgetTotal) * 100) : 0;
+      const prevUtilization = prevData?.up || 66.7;
+      const utilizationTrend = ((utilization - prevUtilization) / prevUtilization * 100).toFixed(1);
 
       data = [
         {
           label: 'Выдано техсредств',
           value: issued,
           status: 'ok',
+          trend: issueTrend,
+          trendIsGood: issueTrend > 0,
         },
         {
           label: 'Освоено бюджета',
           value: utilization,
           status: utilization > 60 ? 'ok' : 'warning',
           note: '%',
+          trend: utilizationTrend,
+          trendIsGood: utilizationTrend > 0,
         },
         {
           label: 'Выделено средств',
