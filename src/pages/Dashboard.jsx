@@ -115,29 +115,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const exportCSV = () => {
-    const timestamp = new Date().toLocaleString('ru-RU');
-    let csv = 'Центр мониторинга социальной поддержки\n';
-    csv += `Экспорт: ${timestamp}\n\n`;
-    csv += 'КЛЮЧЕВЫЕ ПОКАЗАТЕЛИ\n';
-    csv += 'Показатель,Значение,Статус\n';
-
-    kpiData.forEach(kpi => {
-      csv += `"${kpi.label}",${kpi.value},${kpi.status}\n`;
-    });
-
-    csv += '\n\nРЕГИОНЫ\n';
-    csv += selectedRegions.length > 0 ? selectedRegions.join('\n') : 'Все регионы РФ\n';
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `report_${new Date().getTime()}.csv`);
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="content">
       <div className="kpi-row">
@@ -145,35 +122,9 @@ export default function Dashboard() {
           <KpiCard key={idx} {...kpi} />
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', padding: '14px 0' }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <RegionSelector />
-          <PeriodSelector />
-        </div>
-        <button
-          onClick={exportCSV}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: '1px solid rgba(59,130,246,.3)',
-            background: 'rgba(59,130,246,.12)',
-            color: '#60a5fa',
-            fontSize: '13px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.25s',
-          }}
-          onMouseEnter={e => {
-            e.target.style.background = 'rgba(59,130,246,.2)';
-            e.target.style.borderColor = '#60a5fa';
-          }}
-          onMouseLeave={e => {
-            e.target.style.background = 'rgba(59,130,246,.12)';
-            e.target.style.borderColor = 'rgba(59,130,246,.3)';
-          }}
-        >
-          📥 Экспорт CSV
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 0' }}>
+        <RegionSelector />
+        <PeriodSelector />
       </div>
 
       {activeTab === 'population' && (
