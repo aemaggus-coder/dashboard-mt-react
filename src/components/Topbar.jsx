@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
+import { useSF } from '../hooks/useSF';
 
 export default function Topbar() {
   const { theme, setTheme } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const sf = useSF();
   const [time, setTime] = useState('');
 
   useEffect(() => {
@@ -56,6 +59,11 @@ export default function Topbar() {
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite' }}></span>
           обновление: {time}
         </div>
+        {location.pathname === '/dashboard' && (
+          <div style={{ padding: '4px 8px', borderRadius: '4px', background: 'rgba(59,130,246,.15)', fontSize: '11px', color: '#60a5fa', fontFamily: 'var(--mono)' }}>
+            sf={sf.toFixed(3)}
+          </div>
+        )}
         <style>{`@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.5 } }`}</style>
         <div style={{ fontFamily: "'Roboto Mono', monospace", fontSize: '13px', color: 'rgba(255,255,255,.7)' }}>
           {time}

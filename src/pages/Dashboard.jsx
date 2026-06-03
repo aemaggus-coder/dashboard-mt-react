@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../hooks/useStore';
+import { useSF } from '../hooks/useSF';
 import KpiCard from '../components/KpiCard';
 import Card from '../components/Card';
 import CausesChart from '../components/CausesChart';
@@ -28,43 +29,80 @@ import GroupsTableDetails from '../components/GroupsTableDetails';
 import AgeChartDetails from '../components/AgeChartDetails';
 import EmployChartDetails from '../components/EmployChartDetails';
 import NosoListDetails from '../components/NosoListDetails';
-import { BASE, PREV_POP, PREV_EXAM, PREV_TSR, calculateScaleFactor } from '../lib/constants';
+import { BASE, PREV_POP, PREV_EXAM, PREV_TSR } from '../lib/constants';
 
 export default function Dashboard() {
-  const { activeTab, selectedRegions, scope, period } = useStore();
-  const [kpiData, setKpiData] = useState([
-    { label: 'Численность инвалидов', value: BASE.total, status: 'ok' },
-  ]);
+  const { activeTab, period } = useStore();
+  const sf = useSF();
+  const [kpiData, setKpiData] = useState([]);
 
-  // Update KPI data based on active tab
+  // Dynamically render KPI based on active tab and scale factor
   useEffect(() => {
-    const scale = calculateScaleFactor(scope, selectedRegions);
     let data = [];
+
     if (activeTab === 'population') {
       data = [
-        { label: 'Численность инвалидов', value: Math.round(BASE.total * scale), status: 'ok' },
+        {
+          label: 'Численность инвалидов',
+          value: Math.round(BASE.total * sf),
+          status: 'ok',
+        },
       ];
     } else if (activeTab === 'exam') {
       const examData = BASE.exam[period];
-      const scaledPrimary = Math.round(examData.primary * scale);
-      const scaledReexam = Math.round(examData.reexam * scale);
+      const primary = Math.round(examData.primary * sf);
+      const reexam = Math.round(examData.reexam * sf);
+      const total = primary + reexam;
+
       data = [
-        { label: 'Освидетельствовано', value: scaledPrimary + scaledReexam, status: 'ok' },
-        { label: 'Средний срок рассмотрения', value: examData.terms, status: 'ok', note: 'дней' },
+        {
+          label: 'Освидетельствовано',
+          value: total,
+          status: total > 200000 ? 'ok' : 'warning',
+        },
+        {
+          label: 'Средний срок рассмотрения',
+          value: examData.terms,
+          status: examData.terms < 30 ? 'ok' : 'warning',
+          note: 'дней',
+        },
+        {
+          label: 'Уровень обжалований',
+          value: (((examData.appealMain + examData.appealFed) / (examData.primary + examData.reexam)) * 100).toFixed(1),
+          status: 'ok',
+          note: '%',
+        },
       ];
     } else if (activeTab === 'tsr') {
       const tsrData = BASE.tsr[period];
-      const scaledNat = Math.round(tsrData.issuedNat * scale);
-      const scaledCert = Math.round(tsrData.issuedCert * scale);
-      const scaledUsed = Math.round(tsrData.budgetUsed * scale);
-      const scaledTotal = Math.round(tsrData.budgetTotal * scale);
+      const issued = Math.round((tsrData.issuedNat + tsrData.issuedCert) * sf);
+      const budgetUsed = Math.round(tsrData.budgetUsed * sf);
+      const budgetTotal = Math.round(tsrData.budgetTotal * sf);
+      const utilization = Math.round((budgetUsed / budgetTotal) * 100);
+
       data = [
-        { label: 'Выдано техсредств', value: scaledNat + scaledCert, status: 'ok' },
-        { label: 'Использовано бюджета', value: Math.round((scaledUsed / scaledTotal) * 100), status: 'ok', note: '%' },
+        {
+          label: 'Выдано техсредств',
+          value: issued,
+          status: 'ok',
+        },
+        {
+          label: 'Освоено бюджета',
+          value: utilization,
+          status: utilization > 60 ? 'ok' : 'warning',
+          note: '%',
+        },
+        {
+          label: 'Выделено средств',
+          value: budgetTotal,
+          status: 'ok',
+          note: 'млн ₽',
+        },
       ];
     }
+
     setKpiData(data);
-  }, [activeTab, scope, selectedRegions, period]);
+  }, [activeTab, sf, period]);
 
   // Live data refresh every 5 seconds
   useEffect(() => {
