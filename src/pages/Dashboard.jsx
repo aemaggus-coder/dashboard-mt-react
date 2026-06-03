@@ -29,6 +29,7 @@ import GroupsTableDetails from '../components/GroupsTableDetails';
 import AgeChartDetails from '../components/AgeChartDetails';
 import EmployChartDetails from '../components/EmployChartDetails';
 import NosoListDetails from '../components/NosoListDetails';
+import BlockDetail from '../components/BlockDetail';
 import { BASE, PREV_POP, PREV_EXAM, PREV_TSR } from '../lib/constants';
 
 export default function Dashboard() {
@@ -162,18 +163,18 @@ export default function Dashboard() {
 
       {activeTab === 'population' && (
         <div className="view active" id="view-population" style={{ display: 'grid' }}>
-          <Card id="card-causes" label="Структура" title="Причины инвалидности" detailsContent={<CausesDetails />}>
+          <Card id="card-causes" label="Структура" title="Причины инвалидности" detailsContent={<BlockDetail block="causes" />}>
             <CausesChart />
           </Card>
-          <Card id="card-age" label="Демография" title="Возрастные группы" detailsContent={<AgeChartDetails />}>
+          <Card id="card-age" label="Демография" title="Возрастные группы" detailsContent={<BlockDetail block="age" />}>
             <div className="chart-wrap">
               <AgeChart />
             </div>
           </Card>
-          <Card id="card-employ" label="Занятость" title="Группы трудоустройства" detailsContent={<EmployChartDetails />}>
+          <Card id="card-employ" label="Занятость" title="Группы трудоустройства" detailsContent={<BlockDetail block="employ" />}>
             <EmployChart />
           </Card>
-          <Card id="card-noso" label="Нозологии" title="Нозологии" detailsContent={<NosoListDetails />}>
+          <Card id="card-noso" label="Нозологии" title="Нозологии" detailsContent={<BlockDetail block="noso" />}>
             <NosoList />
           </Card>
         </div>
@@ -181,19 +182,19 @@ export default function Dashboard() {
 
       {activeTab === 'exam' && (
         <div className="view active" id="view-exam" style={{ display: 'grid' }}>
-          <Card id="card-primary" label="Экспертиза" title="Освидетельствование" detailsContent={<PrimaryStatsDetails />}>
+          <Card id="card-primary" label="Экспертиза" title="Освидетельствование" detailsContent={<BlockDetail block="primary" />}>
             <PrimaryStats />
           </Card>
-          <Card id="card-form" label="Формат" title="Форма проведения" detailsContent={<FormChartDetails />}>
+          <Card id="card-form" label="Формат" title="Форма проведения" detailsContent={<BlockDetail block="form" />}>
             <FormChart />
           </Card>
-          <Card id="card-result" label="Итог МСЭ" title="Результаты" detailsContent={<ResultChartDetails />}>
+          <Card id="card-result" label="Итог МСЭ" title="Результаты" detailsContent={<BlockDetail block="result" />}>
             <ResultChart />
           </Card>
-          <Card id="card-appeal" label="Несогласие" title="Обжалования" detailsContent={<AppealFunnelDetails />}>
+          <Card id="card-appeal" label="Несогласие" title="Обжалования" detailsContent={<BlockDetail block="appeal" />}>
             <AppealFunnel />
           </Card>
-          <Card id="card-terms" label="Сроки" title="Средний срок рассмотрения" detailsContent={<TermsStatsDetails />}>
+          <Card id="card-terms" label="Сроки" title="Средний срок рассмотрения" detailsContent={<BlockDetail block="terms" />}>
             <TermsStats />
           </Card>
         </div>
@@ -201,13 +202,13 @@ export default function Dashboard() {
 
       {activeTab === 'tsr' && (
         <div className="view active" id="view-tsr" style={{ display: 'grid' }}>
-          <Card id="card-budget" label="Бюджет" title="Объем финансирования" detailsContent={<BudgetGaugeDetails />}>
+          <Card id="card-budget" label="Бюджет" title="Объем финансирования" detailsContent={<BlockDetail block="budget" />}>
             <BudgetGauge />
           </Card>
-          <Card id="card-issued" label="Выданные ТСР" title="Количество техсредств" detailsContent={<IssuedChartsDetails />}>
+          <Card id="card-issued" label="Выданные ТСР" title="Количество техсредств" detailsContent={<BlockDetail block="issued" />}>
             <IssuedCharts />
           </Card>
-          <Card id="card-groups" label="Группы ТСР" title="Распределение по типам" detailsContent={<GroupsTableDetails />}>
+          <Card id="card-groups" label="Группы ТСР" title="Распределение по типам" detailsContent={<BlockDetail block="groups" />}>
             <GroupsTable />
           </Card>
         </div>
