@@ -3,8 +3,8 @@ import { BASE } from '../lib/constants';
 
 export default function TermsStats() {
   const { period } = useStore();
-  const data = BASE.exam[period];
-  const terms = data.terms;
+  const data = BASE.exam[period] || BASE.exam.ytd;
+  const terms = data?.terms || 21.4;
 
   const status = terms < 20 ? 'fast' : terms < 30 ? 'ok' : 'slow';
   const statusLabel = status === 'fast' ? 'Быстро' : status === 'ok' ? 'В норме' : 'Задержка';

@@ -3,7 +3,8 @@ import { BASE } from '../lib/constants';
 
 export default function FormChart() {
   const { period } = useStore();
-  const [onsite, remote] = BASE.exam[period].form;
+  const examData = BASE.exam[period] || BASE.exam.ytd;
+  const [onsite, remote] = examData?.form || [65, 35];
 
   return (
     <div className="donut-kpis">

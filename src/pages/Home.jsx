@@ -197,6 +197,12 @@ export default function Home() {
               {CENTERS.map((center, idx) => (
                 <div
                   key={idx}
+                  onClick={() => {
+                    if (center.href) {
+                      console.log('Div clicked - navigating to:', center.href);
+                      navigate(center.href);
+                    }
+                  }}
                   style={{
                     width: '445px',
                     height: '145px',
@@ -247,8 +253,12 @@ export default function Home() {
                       alignSelf: 'flex-start'
                     }}
                     disabled={!center.href}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Clicked center:', center.id, 'href:', center.href);
                       if (center.href) {
+                        console.log('Navigating to:', center.href);
                         navigate(center.href);
                       }
                     }}

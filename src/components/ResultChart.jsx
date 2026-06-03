@@ -3,7 +3,8 @@ import { BASE } from '../lib/constants';
 
 export default function ResultChart() {
   const { period } = useStore();
-  const [established, notEstablished] = BASE.exam[period].result;
+  const examData = BASE.exam[period] || BASE.exam.ytd;
+  const [established, notEstablished] = examData?.result || [71, 29];
 
   return (
     <div className="donut-kpis">

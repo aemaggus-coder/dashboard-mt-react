@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import './App.css';
 
 function DashboardLayout() {
+  console.log('✅ DashboardLayout mounted - navigated to /dashboard successfully');
   return (
     <div className="app">
       <Topbar />
