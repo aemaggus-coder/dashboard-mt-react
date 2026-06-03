@@ -357,10 +357,10 @@ html:not([data-theme="light"]) .kpi.risk {
 
 #view-population.active {
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: minmax(280px, 1fr) minmax(320px, 1fr);
+  grid-template-rows: minmax(260px, 1fr) minmax(260px, 1fr);
   grid-template-areas:
-    'causes employ age'
-    'causes noso noso';
+    'causes age noso'
+    'causes employ noso';
 }
 
 #card-causes {
