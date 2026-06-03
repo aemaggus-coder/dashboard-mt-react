@@ -49,9 +49,9 @@ export default function Dashboard() {
         },
       ];
     } else if (activeTab === 'exam') {
-      const examData = BASE.exam[period];
-      const primary = Math.round(examData.primary * sf);
-      const reexam = Math.round(examData.reexam * sf);
+      const examData = BASE.exam[period] || BASE.exam.ytd;
+      const primary = Math.round((examData?.primary || 0) * sf);
+      const reexam = Math.round((examData?.reexam || 0) * sf);
       const total = primary + reexam;
 
       data = [
@@ -62,23 +62,23 @@ export default function Dashboard() {
         },
         {
           label: 'Средний срок рассмотрения',
-          value: examData.terms,
-          status: examData.terms < 30 ? 'ok' : 'warning',
+          value: examData?.terms || 21.4,
+          status: (examData?.terms || 21.4) < 30 ? 'ok' : 'warning',
           note: 'дней',
         },
         {
           label: 'Уровень обжалований',
-          value: (((examData.appealMain + examData.appealFed) / (examData.primary + examData.reexam)) * 100).toFixed(1),
+          value: (((examData?.appealMain || 0) + (examData?.appealFed || 0)) / ((examData?.primary || 0) + (examData?.reexam || 0)) * 100).toFixed(1),
           status: 'ok',
           note: '%',
         },
       ];
     } else if (activeTab === 'tsr') {
-      const tsrData = BASE.tsr[period];
-      const issued = Math.round((tsrData.issuedNat + tsrData.issuedCert) * sf);
-      const budgetUsed = Math.round(tsrData.budgetUsed * sf);
-      const budgetTotal = Math.round(tsrData.budgetTotal * sf);
-      const utilization = Math.round((budgetUsed / budgetTotal) * 100);
+      const tsrData = BASE.tsr[period] || BASE.tsr.ytd;
+      const issued = Math.round(((tsrData?.issuedNat || 0) + (tsrData?.issuedCert || 0)) * sf);
+      const budgetUsed = Math.round((tsrData?.budgetUsed || 0) * sf);
+      const budgetTotal = Math.round((tsrData?.budgetTotal || 0) * sf);
+      const utilization = budgetTotal > 0 ? Math.round((budgetUsed / budgetTotal) * 100) : 0;
 
       data = [
         {
