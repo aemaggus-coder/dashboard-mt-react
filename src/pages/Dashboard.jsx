@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/useStore';
 import { useSF } from '../hooks/useSF';
 import KpiCard from '../components/KpiCard';
@@ -16,193 +16,94 @@ import BudgetGauge from '../components/BudgetGauge';
 import IssuedCharts from '../components/IssuedCharts';
 import GroupsTable from '../components/GroupsTable';
 import PeriodSelector from '../components/PeriodSelector';
-import RegionSelector from '../components/RegionSelector';
-import CausesDetails from '../components/CausesDetails';
-import PrimaryStatsDetails from '../components/PrimaryStatsDetails';
-import FormChartDetails from '../components/FormChartDetails';
-import ResultChartDetails from '../components/ResultChartDetails';
-import AppealFunnelDetails from '../components/AppealFunnelDetails';
-import TermsStatsDetails from '../components/TermsStatsDetails';
-import BudgetGaugeDetails from '../components/BudgetGaugeDetails';
-import IssuedChartsDetails from '../components/IssuedChartsDetails';
-import GroupsTableDetails from '../components/GroupsTableDetails';
-import AgeChartDetails from '../components/AgeChartDetails';
-import EmployChartDetails from '../components/EmployChartDetails';
-import NosoListDetails from '../components/NosoListDetails';
 import BlockDetail from '../components/BlockDetail';
 import { BASE, PREV_POP, PREV_EXAM, PREV_TSR } from '../lib/constants';
+
+// trendHtml() — returns {sign,cls,delta} or null. Arrow reflects direction,
+// color (cls) reflects whether the change is good given higherIsBetter.
+function makeTrend(curr, prev, higherIsBetter = true) {
+  if (prev === undefined || prev === null || prev === 0 || curr === undefined || curr === null) return null;
+  const delta = (curr - prev) / Math.abs(prev) * 100;
+  if (!isFinite(delta) || Math.abs(delta) < 0.05) return { sign: '→', cls: 'trend-flat', delta: 0 };
+  const up = delta > 0;
+  const good = higherIsBetter ? up : !up;
+  return { sign: up ? '▲' : '▼', cls: good ? 'trend-up' : 'trend-down', delta };
+}
+
+// jitter() — ±1.4% random variation, applied fresh from base each tick (non-compounding)
+const jit = (v) => v * (1 + (Math.random() - 0.5) * 0.014);
 
 export default function Dashboard() {
   const { activeTab, period } = useStore();
   const sf = useSF();
-  const [kpiData, setKpiData] = useState([]);
+  const [tick, setTick] = useState(0);
 
-  // renderKPI() - Dynamically render KPI based on active tab and scale factor
+  // Live data refresh every 7 seconds (matches old setInterval(loadData,7000))
   useEffect(() => {
-    let data = [];
-
-    if (activeTab === 'population') {
-      // Общая численность
-      const total = Math.round(BASE.total * sf);
-      const prevTotal = Math.round(PREV_POP.total * sf);
-      const totalTrend = ((total - prevTotal) / prevTotal * 100).toFixed(1);
-
-      // Взрослые
-      const adults = Math.round(BASE.adults * sf);
-      const prevAdults = Math.round(PREV_POP.total * 0.995 * sf); // примерно 99.5% взрослых
-      const adultsTrend = ((adults - prevAdults) / prevAdults * 100).toFixed(1);
-
-      // Дети
-      const children = Math.round(BASE.children * sf);
-      const prevChildren = Math.round(PREV_POP.ch * sf);
-      const childrenTrend = ((children - prevChildren) / prevChildren * 100).toFixed(1);
-
-      // СВО/Ветераны
-      const veterans = Math.round(BASE.veterans * sf);
-
-      data = [
-        {
-          label: 'Общая численность',
-          value: total,
-          status: 'ok',
-          note: 'по реестру',
-          trend: totalTrend,
-          trendIsGood: totalTrend > 0,
-        },
-        {
-          label: 'Взрослые',
-          value: Math.round(adults / 1000),
-          status: 'ok',
-          note: 'в тыс. человек',
-          trend: adultsTrend,
-          trendIsGood: adultsTrend > 0,
-        },
-        {
-          label: 'Дети-инвалиды',
-          value: children,
-          status: 'ok',
-          note: 'отдельный контроль',
-          trend: childrenTrend,
-          trendIsGood: childrenTrend > 0,
-        },
-        {
-          label: 'СВО / Ветераны',
-          value: veterans,
-          status: 'ok',
-          note: 'по причине инвалидности',
-        },
-      ];
-    } else if (activeTab === 'exam') {
-      const examData = BASE.exam[period] || BASE.exam.ytd;
-      const prevData = PREV_EXAM[period] || PREV_EXAM.ytd;
-      const primary = Math.round((examData?.primary || 0) * sf);
-      const reexam = Math.round((examData?.reexam || 0) * sf);
-      const total = primary + reexam;
-      const prevTotal = Math.round((prevData?.tx || 0) * sf);
-      const examTrend = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100).toFixed(1) : '0';
-
-      const terms = examData?.terms || 21.4;
-      const prevTerms = prevData?.terms || 22.1;
-      const termsTrend = ((terms - prevTerms) / prevTerms * 100).toFixed(1);
-
-      const appealRate = ((examData?.appealMain || 0) + (examData?.appealFed || 0)) / ((examData?.primary || 0) + (examData?.reexam || 0)) * 100;
-      const prevAppealRate = (prevData?.ar || 5.8);
-      const appealTrend = ((appealRate - prevAppealRate) / prevAppealRate * 100).toFixed(1);
-
-      data = [
-        {
-          label: 'Освидетельствовано',
-          value: total,
-          status: total > 200000 ? 'ok' : 'warning',
-          trend: examTrend,
-          trendIsGood: examTrend > 0,
-        },
-        {
-          label: 'Средний срок рассмотрения',
-          value: terms,
-          status: terms < 30 ? 'ok' : 'warning',
-          note: 'дней',
-          trend: termsTrend,
-          trendIsGood: termsTrend < 0,
-        },
-        {
-          label: 'Уровень обжалований',
-          value: appealRate.toFixed(1),
-          status: 'ok',
-          note: '%',
-          trend: appealTrend,
-          trendIsGood: appealTrend < 0,
-        },
-      ];
-    } else if (activeTab === 'tsr') {
-      const tsrData = BASE.tsr[period] || BASE.tsr.ytd;
-      const prevData = PREV_TSR[period] || PREV_TSR.ytd;
-      const issued = Math.round(((tsrData?.issuedNat || 0) + (tsrData?.issuedCert || 0)) * sf);
-      const prevIssued = Math.round((prevData?.iss || 0) * sf);
-      const issueTrend = prevIssued > 0 ? ((issued - prevIssued) / prevIssued * 100).toFixed(1) : '0';
-
-      const budgetUsed = Math.round((tsrData?.budgetUsed || 0) * sf);
-      const budgetTotal = Math.round((tsrData?.budgetTotal || 0) * sf);
-      const utilization = budgetTotal > 0 ? Math.round((budgetUsed / budgetTotal) * 100) : 0;
-      const prevUtilization = prevData?.up || 66.7;
-      const utilizationTrend = ((utilization - prevUtilization) / prevUtilization * 100).toFixed(1);
-
-      data = [
-        {
-          label: 'Выдано техсредств',
-          value: issued,
-          status: 'ok',
-          trend: issueTrend,
-          trendIsGood: issueTrend > 0,
-        },
-        {
-          label: 'Освоено бюджета',
-          value: utilization,
-          status: utilization > 60 ? 'ok' : 'warning',
-          note: '%',
-          trend: utilizationTrend,
-          trendIsGood: utilizationTrend > 0,
-        },
-        {
-          label: 'Выделено средств',
-          value: budgetTotal,
-          status: 'ok',
-          note: 'млн ₽',
-        },
-      ];
-    }
-
-    setKpiData(data);
-  }, [activeTab, sf, period]);
-
-  // Live data refresh every 5 seconds with jitter()
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setKpiData(prev => prev.map(kpi => {
-        // jitter() - add ±0.7% random variation for realism
-        const jitteredValue = typeof kpi.value === 'number'
-          ? Math.round(kpi.value * (1 + (Math.random() - 0.5) * 0.007))
-          : kpi.value;
-        return {
-          ...kpi,
-          value: jitteredValue
-        };
-      }));
-    }, 5000);
+    const interval = setInterval(() => setTick((t) => t + 1), 7000);
     return () => clearInterval(interval);
   }, []);
 
+  // renderKPI() — dynamically render KPI based on active tab and scale factor.
+  // tick is included so values re-jitter every refresh interval.
+  const kpiData = useMemo(() => {
+    const f = sf;
+    let data = [];
+
+    if (activeTab === 'population') {
+      const total = jit(BASE.total) * f;
+      const ad = BASE.age.adults.values.reduce((s, v) => s + v, 0) * f;
+      const ch = BASE.age.children.values.reduce((s, v) => s + v, 0) * f;
+      data = [
+        { label: 'Общая численность', value: total, note: 'по реестру', status: 'ok', trend: makeTrend(total, PREV_POP.total * f, true) },
+        { label: 'Взрослые', value: ad, note: 'в тыс. человек', status: 'ok', trend: makeTrend(ad, PREV_POP.ad * f, false) },
+        { label: 'Дети-инвалиды', value: ch, note: 'отдельный контроль', status: 'warn', trend: makeTrend(ch, PREV_POP.ch * f, false) },
+        { label: 'СВО / Ветераны', value: Math.round(total * 0.29), note: 'по причине инвалидности', status: 'ok', trend: null },
+      ];
+    } else if (activeTab === 'exam') {
+      const d = BASE.exam[period] || BASE.exam.today;
+      const tx = jit(d.primary + d.reexam) * f;
+      const ap = jit(d.appealMain + d.appealFed) * f;
+      const ar = ap / tx * 100;
+      const inval = Math.round(tx * d.result[0] / 100);
+      const pp = PREV_EXAM[period] || PREV_EXAM.today;
+      data = [
+        { label: 'Освидетельствований', value: tx, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(tx, pp.tx * f, true) },
+        { label: 'Обжалования', value: ap, note: ar > 6 ? 'повышенный уровень' : 'норма', status: ar > 6 ? 'warn' : 'ok', trend: makeTrend(ap, pp.ap * f, true) },
+        { label: 'Инвалидность установлена', value: inval, note: 'по результатам МСЭ', status: 'ok', trend: makeTrend(inval, pp.inval, true) },
+      ];
+    } else if (activeTab === 'tsr') {
+      const d = BASE.tsr[period] || BASE.tsr.today;
+      const budgetUsed = jit(d.budgetUsed);
+      const up = budgetUsed / d.budgetTotal * 100;
+      const issNat = jit(d.issuedNat), issCert = jit(d.issuedCert);
+      const iss = (issNat + issCert) * f;
+      const cp = issCert / (issNat + issCert) * 100;
+      const pp = PREV_TSR[period] || PREV_TSR.today;
+      data = [
+        { label: 'Освоение бюджета', value: up, decimals: 1, suffix: '%', note: up < 60 ? 'низкий темп' : 'норма', status: up < 60 ? 'risk' : 'ok', trend: makeTrend(up, pp.up, true) },
+        { label: 'Выдано ТСР', value: iss, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(iss, pp.iss * f, true) },
+        { label: 'Остаток средств', value: (d.budgetTotal - budgetUsed) * f, suffix: ' млн', note: 'не освоено', status: up < 60 ? 'warn' : 'ok', trend: null },
+        { label: 'Эл. сертификаты', value: cp, decimals: 1, suffix: '%', note: 'цифровизация', status: 'ok', trend: makeTrend(cp, pp.cp, true) },
+      ];
+    }
+
+    return data;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, sf, period, tick]); // tick re-jitters values on each refresh interval
+
   return (
     <div className="content">
-      <div className="kpi-row">
+      <div className="kpi-row" style={{ gridTemplateColumns: `repeat(${kpiData.length || 4}, 1fr)` }}>
         {kpiData.map((kpi, idx) => (
           <KpiCard key={idx} {...kpi} />
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 0' }}>
-        <RegionSelector />
-        <PeriodSelector />
-      </div>
+      {(activeTab === 'exam' || activeTab === 'tsr') && (
+        <div className="period-row" style={{ display: 'block' }}>
+          <PeriodSelector />
+        </div>
+      )}
 
       {activeTab === 'population' && (
         <div className="view active" id="view-population">
@@ -210,9 +111,7 @@ export default function Dashboard() {
             <CausesChart />
           </Card>
           <Card id="card-age" label="Демография" title="Возрастные группы" detailsContent={<BlockDetail block="age" />}>
-            <div className="chart-wrap">
-              <AgeChart />
-            </div>
+            <AgeChart />
           </Card>
           <Card id="card-employ" label="Занятость" title="Группы трудоустройства" detailsContent={<BlockDetail block="employ" />}>
             <EmployChart />

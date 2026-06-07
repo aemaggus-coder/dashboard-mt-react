@@ -2,9 +2,12 @@ import { useStore } from '../hooks/useStore';
 import { useScaledData } from '../hooks/useScaledData';
 import { BASE } from '../lib/constants';
 
+const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+const fmt1 = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 export default function GroupsTable() {
   const { period } = useStore();
-  const tsrData = useScaledData(BASE.tsr[period], ['groups']);
+  const tsrData = useScaledData(BASE.tsr[period] || BASE.tsr.today, ['groups']);
   const groups = tsrData.groups;
 
   return (
@@ -12,42 +15,26 @@ export default function GroupsTable() {
       <table className="tsr-table">
         <thead>
           <tr>
-            <th colSpan="4" className="tsr-group-head">
-              Распределение по типам техсредств
-            </th>
+            <th rowSpan="2">Группа ТСР</th>
+            <th rowSpan="2">Получателей</th>
+            <th colSpan="2" className="tsr-group-head">Выдано</th>
+            <th rowSpan="2" className="col-sum">Сумма (млн ₽)</th>
           </tr>
           <tr>
-            <th>Категория</th>
-            <th className="col-nat">
-              <span className="tsr-sq tsr-sq-fill"></span>Национальные
-            </th>
-            <th className="col-cert">
-              <span className="tsr-sq tsr-sq-half"></span>Сертифицированные
-            </th>
-            <th className="col-people">Получило (люди)</th>
+            <th className="col-nat tsr-sub-head"><span className="tsr-sq tsr-sq-fill"></span>Натуральное</th>
+            <th className="col-cert tsr-sub-head"><span className="tsr-sq tsr-sq-half"></span>Сертификат</th>
           </tr>
         </thead>
         <tbody>
-          {groups.map((group, idx) => (
+          {groups.map((g, idx) => (
             <tr key={idx}>
-              <td>{group.name}</td>
-              <td className="col-nat">{group.nat.toLocaleString('ru-RU')}</td>
-              <td className="col-cert">{group.cert.toLocaleString('ru-RU')}</td>
-              <td className="col-people">{group.people.toLocaleString('ru-RU')}</td>
+              <td>{g.name}</td>
+              <td className="col-people">{fmt(g.people)}</td>
+              <td className="col-nat">{fmt(g.nat)}</td>
+              <td className="col-cert">{fmt(g.cert)}</td>
+              <td className="col-sum">{fmt1(g.sum)}</td>
             </tr>
           ))}
-          <tr style={{ fontWeight: 'bold' }}>
-            <td style={{ color: 'var(--text)' }}>Итого</td>
-            <td className="col-nat" style={{ color: 'var(--blue-l)' }}>
-              {groups.reduce((sum, g) => sum + g.nat, 0).toLocaleString('ru-RU')}
-            </td>
-            <td className="col-cert" style={{ color: '#a78bfa' }}>
-              {groups.reduce((sum, g) => sum + g.cert, 0).toLocaleString('ru-RU')}
-            </td>
-            <td className="col-people">
-              {groups.reduce((sum, g) => sum + g.people, 0).toLocaleString('ru-RU')}
-            </td>
-          </tr>
         </tbody>
       </table>
     </div>

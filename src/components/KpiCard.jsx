@@ -1,38 +1,30 @@
 import { useAnimatedValue } from '../hooks/useAnimatedValue';
 
-export default function KpiCard({ label, value, note, status = 'ok', trend, trendIsGood }) {
-  const animatedValue = useAnimatedValue(value, 500);
+export default function KpiCard({ label, value, note, status = 'ok', decimals = 0, suffix = '', trend }) {
+  const animatedValue = useAnimatedValue(value, 1100);
 
   const fmt = (n) => {
-    if (typeof n === 'number') {
-      return Math.round(n).toLocaleString('ru-RU');
+    if (typeof n !== 'number' || isNaN(n)) return n;
+    if (decimals > 0) {
+      return n.toLocaleString('ru-RU', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     }
-    return n;
+    return Math.round(n).toLocaleString('ru-RU');
   };
 
   return (
     <div className={`kpi ${status}`}>
       <div className="kpi-label">{label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-        <div className="kpi-value">{fmt(animatedValue)}</div>
-        {note && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.6)' }}>{note}</div>}
+      <div className="kpi-value">
+        {fmt(animatedValue)}{suffix}
       </div>
-      {trend !== undefined && (
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: '600',
-            marginTop: '6px',
-            color: trendIsGood ? '#10b981' : '#ef4444',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '3px',
-          }}
-        >
-          <span>{parseFloat(trend) > 0 ? '▲' : '▼'}</span>
-          <span>{Math.abs(trend)}%</span>
-        </div>
-      )}
+      <div className="kpi-note">{note}</div>
+      <div style={{ height: '16px' }}>
+        {trend && (
+          <span className={`kpi-trend ${trend.cls}`}>
+            {trend.sign} {Math.abs(trend.delta).toFixed(1)}% к пред. периоду
+          </span>
+        )}
+      </div>
     </div>
   );
 }

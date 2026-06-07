@@ -13,16 +13,23 @@ export default function PrimaryStats() {
   const animReexam = useAnimatedNumber(data?.reexam || 0, 600);
 
   if (!data) return <div>Загрузка...</div>;
+  const total = data.primary + data.reexam;
+  const primaryPct = total > 0 ? (data.primary / total) * 100 : 0;
+  const reexamPct = total > 0 ? (data.reexam / total) * 100 : 0;
 
   return (
-    <div className="primary-stats">
-      <div className="primary-stat">
-        <div className="stat-hero">{Math.round(animPrimary).toLocaleString('ru-RU')}</div>
-        <div className="stat-label">Первичная инвалидность</div>
+    <div className="exam-summary-card exam-primary-summary">
+      <div className="exam-summary-row">
+        <div className="exam-summary-title">Первичная инвалидность</div>
+        <div className="exam-summary-value">
+          {Math.round(animPrimary).toLocaleString('ru-RU')} <span>({primaryPct.toFixed(1)}%)</span>
+        </div>
       </div>
-      <div className="primary-stat">
-        <div className="stat-hero">{Math.round(animReexam).toLocaleString('ru-RU')}</div>
-        <div className="stat-label">Переосвидетельствование</div>
+      <div className="exam-summary-row">
+        <div className="exam-summary-title">Переосвидетельствование<br />(повторное)</div>
+        <div className="exam-summary-value">
+          {Math.round(animReexam).toLocaleString('ru-RU')} <span>({reexamPct.toFixed(1)}%)</span>
+        </div>
       </div>
     </div>
   );

@@ -40,7 +40,7 @@ export const useStore = create((set) => ({
   setActiveFo: (fo) => set({ activeFo: fo }),
 
   // Период для графиков
-  period: localStorage.getItem('mintrud-period') || 'ytd',
+  period: localStorage.getItem('mintrud-period') || 'today',
   setPeriod: (period) => {
     localStorage.setItem('mintrud-period', period);
     set({ period });

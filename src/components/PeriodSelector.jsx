@@ -1,47 +1,43 @@
+import { useEffect } from 'react';
 import { useStore } from '../hooks/useStore';
-import { PERIOD_LABELS } from '../lib/constants';
+
+// PERIOD_CFG — per-tab period options (matches old dashboard)
+const PERIOD_CFG = {
+  exam: [
+    { p: 'today', l: 'Сегодня' },
+    { p: 'ytd', l: 'С начала года' },
+  ],
+  tsr: [
+    { p: 'today', l: 'Сегодня' },
+    { p: 'month', l: 'За месяц' },
+    { p: 'year', l: 'За год' },
+  ],
+};
 
 export default function PeriodSelector() {
-  const { period, setPeriod } = useStore();
+  const { activeTab, period, setPeriod } = useStore();
+  const cfg = PERIOD_CFG[activeTab];
 
-  const periods = [
-    { id: 'today', label: 'Сегодня' },
-    { id: 'month', label: 'Месяц' },
-    { id: 'qtr', label: 'Квартал' },
-    { id: 'ytd', label: 'С начала года' },
-    { id: 'year', label: 'За год' },
-  ];
+  // If current period is not valid for this tab, reset to the first option (today)
+  useEffect(() => {
+    if (cfg && !cfg.some((x) => x.p === period)) {
+      setPeriod(cfg[0].p);
+    }
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!cfg) return null;
 
   return (
-    <div className="period-row" style={{ display: 'flex' }}>
-      <div className="period-toggle">
-        {periods.map((p) => (
-          <button
-            key={p.id}
-            className={`period-btn ${period === p.id ? 'active' : ''}`}
-            onClick={() => setPeriod(p.id)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: period === p.id ? '#3b82f6' : 'rgba(255,255,255,.1)',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '600',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (period !== p.id) e.target.style.background = 'rgba(255,255,255,.15)';
-            }}
-            onMouseLeave={(e) => {
-              if (period !== p.id) e.target.style.background = 'rgba(255,255,255,.1)';
-            }}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+    <div className={`period-toggle period-toggle-${activeTab}`}>
+      {cfg.map((x) => (
+        <button
+          key={x.p}
+          className={`period-btn ${period === x.p ? 'active' : ''}`}
+          onClick={() => setPeriod(x.p)}
+        >
+          {x.l}
+        </button>
+      ))}
     </div>
   );
 }
