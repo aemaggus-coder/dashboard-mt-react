@@ -18,13 +18,15 @@ export default function NosoList() {
         const col = NOSO_COLORS[i % NOSO_COLORS.length];
         return (
           <div key={i} className="noso-item">
-            <div className="noso-name" title={n.name}>{n.name}</div>
+            <div className="noso-head">
+              <div className="noso-name" title={n.name}>{n.name}</div>
+              <span className="noso-count">{fmt(count)}</span>
+            </div>
             <div className="noso-row">
               <span className="noso-pct" style={{ background: col }}>{pct}%</span>
               <div className="noso-track">
                 <div className="noso-fill" style={{ width: `${barPct}%`, background: col }}></div>
               </div>
-              <span className="noso-count">{fmt(count)}</span>
             </div>
           </div>
         );

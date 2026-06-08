@@ -58,6 +58,7 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 .map-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .map-switcher{display:flex;gap:10px;padding:14px 28px;flex-shrink:0;background:var(--bg);justify-content:center}
+.map-switcher.compact{padding:0 28px 12px;gap:8px;justify-content:flex-start}
 .map-switcher-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;
   padding:7px 16px;font-size:13px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;
   transition:all .25s cubic-bezier(.4,0,.2,1);white-space:nowrap;position:relative}
@@ -70,11 +71,27 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 
 .mbar{width:256px;flex-shrink:0;display:flex;flex-direction:column;height:100%;
   background:var(--surface);border-right:1px solid var(--border);overflow:hidden;backdrop-filter:blur(8px)}
-.mbar-head{padding:16px 13px 14px;flex-shrink:0;border-bottom:1px solid var(--border);min-height:56px;display:flex;align-items:center;margin-top:-130px;padding-top:130px;background:var(--bg)}
+.mbar-mode{padding:12px 12px 10px;border-bottom:1px solid var(--border);background:var(--bg)}
+.mbar-mode-label{font-size:10px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.mbar-mode-actions{display:flex;gap:7px}
+.mbar-mode-actions .map-switcher-btn{flex:1;padding:7px 8px;font-size:12px}
+.mbar-head{padding:13px 13px 12px;flex-shrink:0;border-bottom:1px solid var(--border);min-height:48px;display:flex;align-items:center;background:var(--bg)}
 .mbar-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3)}
 .mbar-tree{flex:1;overflow-y:auto;padding:6px 0 12px}
 .mbar-tree::-webkit-scrollbar{width:3px}
 .mbar-tree::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:3px}
+.mbar-panel{display:none;flex:1;overflow-y:auto;padding:10px 10px 14px}
+.mbar-panel.active{display:block}
+.metric-group{padding:8px 0 10px;border-bottom:1px solid var(--border)}
+.metric-group:last-child{border-bottom:none}
+.metric-group-title{font-size:10px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin:0 2px 7px}
+.metric-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;
+  border:1px solid transparent;background:transparent;color:var(--text-2);border-radius:8px;
+  padding:8px 9px;cursor:pointer;transition:all .15s}
+.metric-btn:hover{background:var(--surface-2);color:var(--text)}
+.metric-btn.active{background:rgba(37,99,235,.16);border-color:rgba(96,165,250,.45);color:var(--blue-l)}
+.metric-name{font-size:12px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metric-unit{font-size:10px;font-family:var(--mono);font-weight:800;color:var(--text-3);flex-shrink:0}
 .mfo-hdr{display:flex;align-items:center;padding:6px 12px 6px 8px;cursor:pointer;transition:background .12s;user-select:none}
 .mfo-hdr:hover{background:var(--surface-2)}
 .mfo-hdr.mfo-active{background:rgba(37,99,235,.12)}
@@ -119,14 +136,14 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 .reg-val{font-size:6px;font-family:var(--mono);font-weight:600;opacity:.75;margin-top:1px}
 
 .map-tooltip{position:fixed;z-index:2000;pointer-events:none;opacity:0;transition:opacity .15s;
-  background:var(--surface);border:2px solid var(--blue);border-radius:12px;padding:16px 20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);min-width:240px;backdrop-filter:blur(8px)}
+  background:var(--surface);border:1.5px solid var(--blue);border-radius:9px;padding:9px 12px;
+  box-shadow:0 14px 34px rgba(0,0,0,.42);min-width:160px;max-width:220px;backdrop-filter:blur(8px)}
 .map-tooltip.tt-show{opacity:1}
-.map-tt-name{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px}
-.map-tt-fo{font-size:11px;font-weight:700;color:var(--blue-l);text-transform:uppercase;margin-bottom:12px;letter-spacing:0.5px}
-.map-tt-row{display:flex;align-items:center;gap:12px}
-.map-tt-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
-.map-tt-val{font-size:24px;font-weight:800;font-family:var(--mono);color:var(--blue-l)}
+.map-tt-name{font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-tt-fo{font-size:9px;font-weight:700;color:var(--blue-l);text-transform:uppercase;margin-bottom:7px;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-tt-row{display:flex;align-items:center;gap:8px}
+.map-tt-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.map-tt-val{font-size:18px;font-weight:800;font-family:var(--mono);color:var(--blue-l)}
 
 html[data-theme="light"] .btn-home{color:#fff;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.12)}
 html[data-theme="light"] .btn-home:hover{background:rgba(15,23,42,.15);border-color:rgba(15,23,42,.3)}
@@ -179,17 +196,25 @@ html[data-theme="light"] .map-sub{color:#000!important}
   <!-- GRID VIEW -->
   <div class="map-view active" data-map="grid">
     <aside class="mbar">
-      <div class="mbar-head">
-        <div class="mbar-title">Субъекты РФ</div>
+      <div class="mbar-mode">
+        <div class="mbar-mode-label">Режим выбора</div>
+        <div class="mbar-mode-actions">
+          <button class="map-switcher-btn active" data-panel="region">Регион</button>
+          <button class="map-switcher-btn" data-panel="metric">Метрика</button>
+        </div>
       </div>
-      <div class="mbar-tree" id="mbarTree"></div>
+      <div class="mbar-head">
+        <div class="mbar-title" id="mbarTitle">Субъекты РФ</div>
+      </div>
+      <div class="mbar-tree mbar-panel active" id="mbarTree"></div>
+      <div class="mbar-panel" id="metricTree"></div>
       <div class="mbar-foot">
         <div class="mleg-row">
           <span class="mleg-lbl">меньше</span>
           <div class="mleg-bar"></div>
           <span class="mleg-lbl">больше</span>
         </div>
-        <div style="margin-top:6px;font-size:11px;color:var(--text-3)">Всего инвалидов: <b id="mbarTotal">—</b></div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text-3)"><span id="mbarTotalLabel">Общая численность</span>: <b id="mbarTotal">—</b></div>
       </div>
     </aside>
     <div class="mbar-content">
@@ -276,13 +301,96 @@ const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 let _mapRegionVals={},_mapValMin=0,_mapValMax=1;
 let _mbarActiveFo=null,_mbarActiveRegion=null;
 let _mapD3Mode='score';
+let _mapPanelMode='region';
+let _mapMetric='population_total';
+
+const MAP_METRIC_GROUPS=[
+  {title:'Общие сведения',items:[
+    {key:'population_total',name:'Общая численность',unit:'чел.',d3:'score'},
+    {key:'employment',name:'Занятость',unit:'%',d3:'tsr'},
+    {key:'nosology',name:'Нозологический профиль',unit:'чел.',d3:'score'}
+  ]},
+  {title:'Освидетельствование',items:[
+    {key:'exam_total',name:'Освидетельствовано',unit:'чел.',d3:'score'},
+    {key:'exam_established',name:'Установлено',unit:'чел.',d3:'tsr'},
+    {key:'exam_appeal',name:'Обжаловано',unit:'чел.',d3:'overdue'},
+    {key:'exam_load',name:'Нагрузка',unit:'дел/эксп.',d3:'overdue'}
+  ]},
+  {title:'Обеспечение ТСР',items:[
+    {key:'tsr_people',name:'Обеспечено инвалидов',unit:'чел.',d3:'tsr'},
+    {key:'tsr_total',name:'Выдано всего ТСР',unit:'ед.',d3:'tsr'},
+    {key:'tsr_natural',name:'Выдано натур',unit:'ед.',d3:'tsr'},
+    {key:'tsr_cert',name:'Эл. сертификаты',unit:'%',d3:'budget'},
+    {key:'budget',name:'Финансирование',unit:'%',d3:'budget'}
+  ]}
+];
+
+function activeMetric(){return MAP_METRIC_GROUPS.flatMap(g=>g.items).find(m=>m.key===_mapMetric)||MAP_METRIC_GROUPS[0].items[0];}
+function _hashRegionMetric(name,key){let h=0;const s=name+'|'+key;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
+function metricValue(name){
+  const h=_hashRegionMetric(name,_mapMetric);
+  if(_mapMetric.includes('budget')||_mapMetric==='tsr_cert'||_mapMetric==='employment')return 35+(h%610)/10;
+  if(_mapMetric==='exam_load')return 280+(h%520);
+  const base={population_total:22000,nosology:9200,exam_total:4100,exam_established:2800,exam_appeal:180,tsr_people:1700,tsr_total:7600,tsr_natural:4100}[_mapMetric]||3000;
+  return Math.round(base*(0.45+(h%180)/100));
+}
+function metricDisplay(v){
+  const unit=activeMetric().unit;
+  if(unit==='%'||unit==='дел/эксп.')return (Math.round(v*10)/10).toLocaleString('ru-RU')+(unit==='%'?'%':'');
+  return fmt(v);
+}
+function metricAggregate(list){
+  const vals=list.map(n=>_mapRegionVals[n]||0);
+  if(!vals.length)return 0;
+  const unit=activeMetric().unit;
+  const total=vals.reduce((s,v)=>s+v,0);
+  return unit==='%'||unit==='дел/эксп.'?total/vals.length:total;
+}
 
 function _mapHeatRgb(t){const s=[[0,[34,197,94]],[.25,[132,204,34]],[.5,[250,191,36]],[.75,[251,146,60]],[1,[255,67,67]]];for(let i=0;i<s.length-1;i++){const[t0,[r0,g0,b0]]=s[i],[t1,[r1,g1,b1]]=s[i+1];if(t<=t1+.001){const p=(t-t0)/(t1-t0);return[~~(r0+(r1-r0)*p),~~(g0+(g1-g0)*p),~~(b0+(b1-b0)*p)];};}return s[s.length-1][1];}
 function _mapTileBg(name){const v=_mapRegionVals[name]||0;const t=(v-_mapValMin)/(_mapValMax-_mapValMin||1);const[r,g,b]=_mapHeatRgb(t);const a=(0.55+t*0.4).toFixed(2);return{bg:'rgba('+r+','+g+','+b+','+a+')',bdr:'rgba('+r+','+g+','+b+','+(Math.min(1,parseFloat(a)+0.2)).toFixed(2)+')',t,r,g,b,a:parseFloat(a)};}
 
+function rebuildMetricValues(){
+  _mapRegionVals={};
+  REGIONS.forEach(fo=>fo.list.forEach(n=>{_mapRegionVals[n]=metricValue(n);}));
+  const vals=Object.values(_mapRegionVals);_mapValMin=Math.min(...vals);_mapValMax=Math.max(...vals);
+}
+
+function renderMetricTree(){
+  const tree=qs('#metricTree');if(!tree)return;let html='';
+  MAP_METRIC_GROUPS.forEach(group=>{
+    html+='<div class="metric-group"><div class="metric-group-title">'+group.title+'</div>';
+    group.items.forEach(item=>{
+      html+='<button class="metric-btn'+(item.key===_mapMetric?' active':'')+'" data-metric="'+item.key+'"><span class="metric-name">'+item.name+'</span><span class="metric-unit">'+item.unit+'</span></button>';
+    });
+    html+='</div>';
+  });
+  tree.innerHTML=html;
+  tree.querySelectorAll('[data-metric]').forEach(btn=>btn.addEventListener('click',function(){switchMetric(this.dataset.metric);}));
+}
+
+function switchPanelMode(mode){
+  _mapPanelMode=mode;
+  document.querySelectorAll('[data-panel]').forEach(btn=>btn.classList.toggle('active',btn.dataset.panel===mode));
+  qs('#mbarTree').classList.toggle('active',mode==='region');
+  qs('#metricTree').classList.toggle('active',mode==='metric');
+  qs('#mbarTitle').textContent=mode==='region'?'Субъекты РФ':'Метрики';
+}
+
+function switchMetric(key){
+  _mapMetric=key;
+  const metric=activeMetric();
+  _mapD3Mode=metric.d3||'score';
+  document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===_mapD3Mode));
+  rebuildMetricValues();
+  renderMetricTree();
+  renderMapGrid();
+  if(qs('.map-view[data-map="d3"]').classList.contains('active'))renderMapD3();
+}
+
 function buildMapTree(filter){
   const q=(filter||'').toLowerCase().trim();const tree=qs('#mbarTree');if(!tree)return;let html='';
-  REGIONS.forEach(({fo,color,list})=>{const clr=color||'#6c6c70';const visible=q?list.filter(n=>n.toLowerCase().includes(q)||regShort(n).toLowerCase().includes(q)):list;if(!visible.length)return;const foTotal=visible.reduce((s,n)=>s+(_mapRegionVals[n]||0),0);const isOpen=(!q&&_mbarActiveFo===fo)||!!q;html+='<div class="mfo-node'+(isOpen?' open':'')+'" data-fo="'+fo+'"><div class="mfo-hdr'+(!q&&_mbarActiveFo===fo?' mfo-active':'')+'"><span class="mfo-chev"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mfo-dot" style="background:'+clr+'"></span><span class="mfo-name">'+fo+'</span><span class="mfo-cnt">'+visible.length+'</span><span class="mfo-tot">'+Math.round(foTotal/1000)+'К</span></div><div class="mfo-regs">';[...visible].sort((a,b)=>(_mapRegionVals[b]||0)-(_mapRegionVals[a]||0)).forEach(n=>{const c=_mapTileBg(n);const v=_mapRegionVals[n]||0;html+='<div class="mreg-row'+(_mbarActiveRegion===n?' mreg-active':'')+'" data-name="'+n+'" data-fo="'+fo+'"><span class="mreg-heat" style="background:'+c.bg+'"></span><span class="mreg-lbl">'+n+'</span><span class="mreg-num">'+Math.round(v/1000)+'К</span></div>';});html+='</div></div>';});
+  REGIONS.forEach(({fo,color,list})=>{const clr=color||'#6c6c70';const visible=q?list.filter(n=>n.toLowerCase().includes(q)||regShort(n).toLowerCase().includes(q)):list;if(!visible.length)return;const foTotal=metricAggregate(visible);const isOpen=(!q&&_mbarActiveFo===fo)||!!q;html+='<div class="mfo-node'+(isOpen?' open':'')+'" data-fo="'+fo+'"><div class="mfo-hdr'+(!q&&_mbarActiveFo===fo?' mfo-active':'')+'"><span class="mfo-chev"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mfo-dot" style="background:'+clr+'"></span><span class="mfo-name">'+fo+'</span><span class="mfo-cnt">'+visible.length+'</span><span class="mfo-tot">'+metricDisplay(foTotal)+'</span></div><div class="mfo-regs">';[...visible].sort((a,b)=>(_mapRegionVals[b]||0)-(_mapRegionVals[a]||0)).forEach(n=>{const c=_mapTileBg(n);const v=_mapRegionVals[n]||0;html+='<div class="mreg-row'+(_mbarActiveRegion===n?' mreg-active':'')+'" data-name="'+n+'" data-fo="'+fo+'"><span class="mreg-heat" style="background:'+c.bg+'"></span><span class="mreg-lbl">'+n+'</span><span class="mreg-num">'+metricDisplay(v)+'</span></div>';});html+='</div></div>';});
   tree.innerHTML=html;tree.querySelectorAll('.mfo-hdr').forEach(el=>{el.addEventListener('click',function(){const node=this.closest('.mfo-node'),fo=node.dataset.fo;const wasOpen=node.classList.contains('open');node.classList.toggle('open',!wasOpen);_mbarActiveFo=(_mbarActiveFo===fo&&wasOpen)?null:fo;_mbarActiveRegion=null;_refreshMapTiles();_updateMbarStat();});});tree.querySelectorAll('.mreg-row').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const name=this.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=this.dataset.fo;}_refreshMapTiles();if(_mbarActiveRegion){const tile=qs('.reg-tile[data-name="'+_mbarActiveRegion+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});}_updateMbarStat();});});
 }
 
@@ -296,28 +404,42 @@ function _updateMbarStat(){
     const b=document.createElement('b');
     b.textContent=_mbarActiveRegion;
     el.appendChild(b);
-    el.appendChild(document.createTextNode(' · '+fmt(_mapRegionVals[_mbarActiveRegion]||0)+' чел.'));
+    el.appendChild(document.createTextNode(' · '+metricDisplay(_mapRegionVals[_mbarActiveRegion]||0)+' · '+activeMetric().name));
   }else if(_mbarActiveFo){
     const g=REGIONS.find(x=>x.fo===_mbarActiveFo);
     const list=g?g.list:[];
     const b=document.createElement('b');
     b.textContent=_mbarActiveFo;
     el.appendChild(b);
-    el.appendChild(document.createTextNode(' · '+list.length+' субъектов · '+fmt(list.reduce((s,n)=>s+(_mapRegionVals[n]||0),0))+' чел.'));
+    el.appendChild(document.createTextNode(' · '+list.length+' субъектов · '+metricDisplay(metricAggregate(list))+' · '+activeMetric().name));
   }
 }
 
-function initMapTooltip(){const tt=qs('#mapTooltip');const grid=qs('#regGrid');if(!tt||!grid)return;grid.addEventListener('mouseover',function(e){const tile=e.target.closest('.reg-tile');if(tile)tile.classList.add('hovered');});grid.addEventListener('mousemove',function(e){const tile=e.target.closest('.reg-tile');if(!tile){tt.classList.remove('tt-show');return;}tt.querySelector('#ttName').textContent=tile.dataset.name;tt.querySelector('#ttFo').textContent=tile.dataset.fo;tt.querySelector('#ttVal').textContent=tile.dataset.val+' чел.';tt.querySelector('#ttDot').style.background=tile.dataset.bg;const x=e.clientX+18,y=e.clientY-20;const vw=window.innerWidth,vh=window.innerHeight;const ttW=220,ttH=110;tt.style.left=Math.min(x,vw-ttW-8)+'px';tt.style.top=Math.max(8,Math.min(y,vh-ttH-8))+'px';tt.classList.add('tt-show');});grid.addEventListener('mouseleave',function(){grid.querySelectorAll('.reg-tile').forEach(t=>t.classList.remove('hovered'));tt.classList.remove('tt-show');});}
+function placeMapTooltip(tt,e,preferLeft=false){
+  const rect=tt.getBoundingClientRect();
+  const ttW=rect.width||190,ttH=rect.height||82;
+  const gap=18;
+  let left=preferLeft?e.clientX-ttW-gap:e.clientX+gap;
+  let top=e.clientY-ttH-gap;
+  if(left+ttW>window.innerWidth-8)left=e.clientX-ttW-gap;
+  if(left<8)left=e.clientX+gap;
+  if(top<8)top=e.clientY+gap;
+  if(top+ttH>window.innerHeight-8)top=window.innerHeight-ttH-8;
+  tt.style.left=left+'px';
+  tt.style.top=top+'px';
+}
+
+function initMapTooltip(){const tt=qs('#mapTooltip');const grid=qs('#regGrid');if(!tt||!grid)return;grid.addEventListener('mouseover',function(e){const tile=e.target.closest('.reg-tile');if(tile)tile.classList.add('hovered');});grid.addEventListener('mousemove',function(e){const tile=e.target.closest('.reg-tile');if(!tile){tt.classList.remove('tt-show');return;}tt.querySelector('#ttName').textContent=tile.dataset.name;tt.querySelector('#ttFo').textContent=tile.dataset.fo+' · '+activeMetric().name;tt.querySelector('#ttVal').textContent=tile.dataset.val;tt.querySelector('#ttDot').style.background=tile.dataset.bg;tt.classList.add('tt-show');placeMapTooltip(tt,e);});grid.addEventListener('mouseleave',function(){grid.querySelectorAll('.reg-tile').forEach(t=>t.classList.remove('hovered'));tt.classList.remove('tt-show');});}
 
 function renderMapGrid(){
   console.log('renderMapGrid() called');
-  const total=2170900;_mapRegionVals={};REGIONS.forEach(fo=>fo.list.forEach(n=>{_mapRegionVals[n]=Math.round(total*Math.random()*0.022);}));const vals=Object.values(_mapRegionVals);_mapValMin=Math.min(...vals);_mapValMax=Math.max(...vals);
-  const tiles=[];REGIONS.forEach(fo=>fo.list.forEach(n=>{const pos=REGION_GRID[n];if(!pos)return;const[c,r]=pos;const v=_mapRegionVals[n]||0;const bg=_mapTileBg(n);const lum=(0.299*bg.r+0.587*bg.g+0.114*bg.b)/255*bg.a;const textCol=lum>0.38?'#1c1c1e':'#f2f2f7';const valCol=lum>0.38?'rgba(28,28,30,.6)':'rgba(242,242,247,.6)';tiles.push('<div class="reg-tile" role="gridcell" tabindex="-1" aria-selected="false" aria-label="'+n+', '+fo.fo+', '+fmt(v)+' инвалидов" data-name="'+n+'" data-fo="'+fo.fo+'" data-val="'+fmt(v)+'" data-bg="'+bg.bg+'" style="grid-column:'+c+';grid-row:'+r+';background:'+bg.bg+';border-color:'+bg.bdr+'"><div class="reg-name" style="color:'+textCol+'">'+regShort(n)+'</div><div class="reg-val" style="color:'+valCol+'">'+(v>=1000?fmt(Math.round(v/100)/10)+'К':v)+'</div></div>');}));
+  rebuildMetricValues();
+  const tiles=[];REGIONS.forEach(fo=>fo.list.forEach(n=>{const pos=REGION_GRID[n];if(!pos)return;const[c,r]=pos;const v=_mapRegionVals[n]||0;const bg=_mapTileBg(n);const lum=(0.299*bg.r+0.587*bg.g+0.114*bg.b)/255*bg.a;const textCol=lum>0.38?'#1c1c1e':'#f2f2f7';const valCol=lum>0.38?'rgba(28,28,30,.6)':'rgba(242,242,247,.6)';tiles.push('<div class="reg-tile" role="gridcell" tabindex="-1" aria-selected="false" aria-label="'+n+', '+fo.fo+', '+activeMetric().name+', '+metricDisplay(v)+'" data-name="'+n+'" data-fo="'+fo.fo+'" data-val="'+metricDisplay(v)+'" data-bg="'+bg.bg+'" style="grid-column:'+c+';grid-row:'+r+';background:'+bg.bg+';border-color:'+bg.bdr+'"><div class="reg-name" style="color:'+textCol+'">'+regShort(n)+'</div><div class="reg-val" style="color:'+valCol+'">'+metricDisplay(v)+'</div></div>');}));
   console.log('generated',tiles.length,'tiles');
   const grid=qs('#regGrid');console.log('grid element:',grid);
   grid.innerHTML=tiles.join('');console.log('grid innerHTML set');
   initMapTooltip();qs('#regGrid').addEventListener('click',function(e){const tile=e.target.closest('.reg-tile');if(tile&&tile.classList.contains('reg-dimmed'))return;if(!tile){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_updateMbarStat();return;}const name=tile.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=tile.dataset.fo;}buildMapTree('');_refreshMapTiles();if(_mbarActiveRegion){const row=qs('.mreg-row[data-name="'+_mbarActiveRegion+'"]');if(row)row.scrollIntoView({behavior:'smooth',block:'nearest'});}_updateMbarStat();});
-  buildMapTree('');const grandTotal=REGIONS.flatMap(g=>g.list).reduce((s,n)=>s+(_mapRegionVals[n]||0),0);const te=qs('#mbarTotal');if(te)te.textContent=fmt(grandTotal)+' чел.';_refreshMapTiles();_updateMbarStat();
+  buildMapTree('');renderMetricTree();const allRegions=REGIONS.flatMap(g=>g.list);const grandTotal=metricAggregate(allRegions);const te=qs('#mbarTotal');if(te)te.textContent=metricDisplay(grandTotal);const tl=qs('#mbarTotalLabel');if(tl)tl.textContent=activeMetric().name;_refreshMapTiles();_updateMbarStat();
 }
 
 function applyTheme(t){
@@ -368,6 +490,56 @@ function _getD3Color(d){
   return scale(val);
 }
 
+function _d3ExtraProps(name){
+  const h=_hashRegionMetric(name,'d3-extra');
+  return {
+    ru_name:name,
+    score:35+(h%52),
+    tsr:72+(h%180)/10,
+    budget:58+(h%330)/10,
+    overdue:0.8+(h%52)/10
+  };
+}
+
+const D3_EXTRA_REGIONS=[
+  {name:'Республика Крым',geometry:{type:'Polygon',coordinates:[[[32.7727,45.8266],[32.2974,45.5749],[32.2034,45.4248],[32.2357,45.2758],[32.3624,45.1711],[32.5724,45.1183],[32.8315,45.1508],[33.0111,45.0149],[33.6772,44.7862],[33.6161,44.712],[33.777,44.6903],[33.7163,44.6204],[33.8272,44.5713],[33.9262,44.4213],[33.7619,44.3895],[33.6966,44.191],[34.2375,44.2322],[34.5414,44.3954],[34.7358,44.5848],[35.1774,44.5973],[35.6322,44.8491],[35.8199,44.7923],[36.2558,44.8219],[36.6097,44.9407],[36.5305,45.1992],[36.6635,45.3599],[36.6816,45.4566],[36.6684,45.6266],[36.5832,45.6352],[36.3387,45.6715],[35.9818,45.6167],[35.7852,45.6433],[35.6502,45.5926],[35.5748,45.4895],[35.2334,45.7917],[34.9751,45.762],[34.9598,45.7566],[34.7991,45.8105],[34.8022,45.9006],[34.6285,45.9864],[34.4762,45.9441],[34.3396,46.0579],[33.6459,46.2302],[33.5407,46.012],[33.1867,45.9267],[32.7727,45.8266]]]}},
+  {name:'г. Севастополь',geometry:{type:'Polygon',coordinates:[[[33.2952,44.9405],[33.2463,44.7633],[33.1058,44.6451],[33.1103,44.506],[33.2954,44.3348],[33.6966,44.191],[33.7619,44.3895],[33.9262,44.4213],[33.8272,44.5713],[33.7163,44.6204],[33.777,44.6903],[33.6161,44.712],[33.6772,44.7862],[33.5543,44.8402],[33.2952,44.9405]]]}},
+  {name:'Херсонская область',geometry:{type:'Polygon',coordinates:[[[35.2334,45.7917],[35.151,45.9315],[35.3274,45.9853],[35.468,46.1465],[35.3757,46.1945],[35.2781,46.2646],[35.0735,46.2999],[35.0535,46.4816],[34.8904,46.5068],[34.8912,46.5626],[34.7576,46.5493],[34.7128,46.6201],[34.7563,46.627],[34.7462,46.6832],[34.6322,46.6876],[34.817,46.8289],[34.7362,46.9615],[34.6238,46.9734],[34.5195,47.1047],[34.491,47.2406],[34.4909,47.2468],[34.5301,47.2508],[34.5272,47.2674],[34.4794,47.3151],[34.5159,47.3362],[34.3053,47.2691],[34.2185,47.4527],[33.9548,47.4576],[33.9348,47.5163],[33.9067,47.5118],[33.6436,47.4845],[33.5715,47.5242],[33.5803,47.6002],[33.3143,47.4825],[33.2856,47.5441],[33.2154,47.533],[33.234,47.5771],[33.0927,47.5788],[33.0889,47.5522],[33.095,47.5276],[33.1413,47.5445],[33.1417,47.5435],[33.1378,47.4195],[33.0716,47.4124],[33.0705,47.4748],[33.0668,47.4749],[33.0359,47.3912],[33.0393,47.3797],[33.1221,47.3901],[33.1052,47.2805],[33.1828,47.2386],[32.9179,47.1434],[32.9167,47.0872],[33.0686,47.0222],[33.0228,46.9729],[32.9497,47.0032],[32.9795,46.9335],[32.8392,46.8963],[32.9491,46.8579],[32.7014,46.8208],[32.5443,46.8832],[32.532,46.8238],[32.3416,46.7954],[32.3147,46.806],[32.2275,46.8452],[32.2187,46.7713],[32.0572,46.7446],[32.087,46.6835],[31.9402,46.651],[31.8072,46.479],[31.8306,46.3533],[31.3815,46.4076],[31.1591,46.4097],[31.1999,46.4044],[31.2373,46.4032],[31.2654,46.2176],[31.4248,46.0903],[32.4468,45.8707],[32.7727,45.8266],[33.1867,45.9267],[33.5407,46.012],[33.6459,46.2302],[34.3396,46.0579],[34.4762,45.9441],[34.6285,45.9864],[34.8022,45.9006],[34.7991,45.8105],[34.9751,45.762],[35.2334,45.7917]]]}},
+  {name:'Запорожская область',geometry:{type:'Polygon',coordinates:[[[35.468,46.1465],[35.8444,46.41],[35.986,46.3162],[36.1565,46.3042],[36.4988,46.5282],[36.7608,46.4595],[36.9591,46.5216],[37.0242,46.6389],[37.1687,46.7104],[37.0214,46.9279],[37.1411,46.982],[37.0987,47.0592],[36.9854,47.0798],[37.0022,47.1272],[36.8546,47.1991],[36.9626,47.2017],[36.926,47.3194],[37.2034,47.3558],[37.245,47.4691],[37.1577,47.4549],[36.9443,47.5761],[36.8934,47.5449],[36.8303,47.6242],[36.7481,47.6066],[36.7183,47.6588],[36.7916,47.6849],[36.7134,47.6789],[36.6713,47.7936],[36.5938,47.784],[36.5876,47.7854],[36.6047,47.8508],[36.0737,47.8488],[36.1197,47.9279],[36.0479,47.9655],[36.0525,48.0591],[35.9753,48.0432],[35.9666,48.0948],[35.9206,48.0821],[35.8169,48.0661],[35.7034,48.1402],[35.5931,48.0983],[35.5237,48.0744],[35.295,48.1443],[34.9297,48.0903],[34.8551,48.133],[34.847,48.0139],[34.9191,47.9335],[34.802,47.9156],[34.8972,47.8528],[34.8936,47.7602],[34.9575,47.7696],[34.9057,47.6739],[34.958,47.5383],[34.5724,47.5616],[34.1395,47.4772],[34.2427,47.4339],[34.3053,47.2691],[34.5159,47.3362],[34.4805,47.3078],[34.5301,47.2508],[34.4909,47.2468],[34.491,47.2406],[34.5673,47.0245],[34.8047,46.8825],[34.7505,46.7579],[34.6252,46.724],[34.7462,46.6832],[34.7233,46.5815],[35.0535,46.4816],[35.0735,46.2999],[35.3757,46.1945],[35.468,46.1465]]]}},
+  {name:'Донецкая НР',geometry:{type:'Polygon',coordinates:[[[36.7389,48.6259],[36.9016,48.5433],[36.8298,48.4846],[36.8088,48.348],[36.9121,48.309],[36.9369,48.1942],[36.8728,48.1839],[36.8965,48.0776],[36.8545,48.0346],[36.5801,48.0796],[36.5851,47.9566],[36.6288,47.9618],[36.6402,47.9203],[36.542,47.906],[36.6047,47.8508],[36.5876,47.7854],[36.5938,47.784],[36.6713,47.7936],[36.7134,47.6789],[36.7916,47.6849],[36.7183,47.6588],[36.7481,47.6066],[36.8303,47.6242],[36.8934,47.5449],[36.9443,47.5761],[37.1577,47.4549],[37.245,47.4691],[37.2034,47.3558],[36.926,47.3194],[36.9626,47.2017],[36.8546,47.1991],[37.0022,47.1272],[36.9854,47.0798],[37.1249,47.0391],[37.0893,47.0075],[37.1411,46.982],[37.0214,46.9279],[37.1959,46.7013],[37.3979,46.7016],[37.4376,46.7158],[37.6201,46.8299],[38.1409,46.861],[38.3381,46.9808],[38.2285,47.1226],[38.2329,47.229],[38.3335,47.2692],[38.336,47.3063],[38.2209,47.3054],[38.3024,47.3928],[38.3108,47.5761],[38.6164,47.6446],[38.6658,47.6987],[38.7726,47.6855],[38.843,47.8653],[39.0745,47.8695],[39.0398,48.0069],[38.8254,48.0298],[38.8204,48.1162],[38.6025,48.1723],[38.5747,48.2676],[38.427,48.2783],[38.4984,48.3656],[38.4332,48.4477],[38.2882,48.4767],[38.3201,48.5089],[38.2289,48.634],[38.315,48.6847],[38.263,48.7502],[38.3135,48.8283],[38.2214,48.8396],[38.2289,48.8585],[38.2279,48.9368],[38.0052,48.9466],[38.0989,48.9923],[38.0531,49.0589],[38.0816,49.148],[37.8934,49.1605],[37.9333,49.2208],[37.5691,49.2313],[37.5013,49.1804],[37.5846,49.1262],[37.385,49.0482],[37.2947,48.9712],[37.328,48.922],[37.1935,48.8814],[37.1921,48.8145],[37.0988,48.851],[36.9949,48.7874],[37.0359,48.7459],[36.7198,48.8057],[36.7341,48.6465],[36.7389,48.6259]]]}},
+  {name:'Луганская НР',geometry:{type:'Polygon',coordinates:[[[37.8744,49.2339],[37.9427,49.2141],[37.8931,49.1747],[37.9265,49.1438],[38.0816,49.148],[38.0531,49.0589],[38.0989,48.9923],[38.0052,48.9466],[38.2279,48.9368],[38.2289,48.8585],[38.2214,48.8396],[38.3135,48.8283],[38.263,48.7502],[38.315,48.6847],[38.2289,48.634],[38.3201,48.5089],[38.2882,48.4767],[38.4332,48.4477],[38.4984,48.3656],[38.427,48.2783],[38.5747,48.2676],[38.6025,48.1723],[38.8204,48.1162],[38.8254,48.0298],[39.0398,48.0069],[39.0831,47.8516],[39.738,47.8278],[39.8248,47.9553],[39.7769,48.0399],[39.8834,48.0416],[39.834,48.067],[39.942,48.2286],[40.0096,48.2251],[39.9903,48.3171],[39.915,48.2696],[39.8412,48.3101],[39.9474,48.3547],[39.8464,48.4738],[39.8504,48.5679],[39.6606,48.6091],[39.8001,48.8426],[39.9755,48.793],[40.0801,48.8701],[40.0351,48.9159],[39.9932,48.8682],[39.827,48.8865],[39.7529,48.9859],[39.6637,49.0009],[39.6932,49.0505],[39.938,49.0564],[40.0311,49.1798],[40.2213,49.2499],[40.1946,49.3465],[40.0293,49.4536],[40.0392,49.5207],[40.1696,49.5688],[40.1394,49.5959],[40.1354,49.6171],[39.806,49.558],[39.6579,49.6167],[39.6105,49.7337],[39.2852,49.7554],[39.1799,49.8888],[38.9302,49.797],[38.9012,49.8693],[38.694,49.9349],[38.687,50.0077],[38.6475,49.9559],[38.4887,49.9632],[38.3505,50.0069],[38.3296,50.0854],[38.1782,50.08],[38.2218,49.9791],[38.0458,49.9153],[38.0936,49.8461],[38.0183,49.8375],[38.0537,49.7835],[37.9508,49.7312],[38.0472,49.6575],[37.8421,49.5076],[37.8832,49.3129],[37.946,49.303],[37.9585,49.2847],[37.8658,49.2458],[37.8744,49.2339]]]}}
+];
+
+function renderD3ExtraRegions(g,projection){
+  const orientForD3=geometry=>{
+    const reverseRing=ring=>[...ring].reverse();
+    if(geometry.type==='Polygon')return{type:'Polygon',coordinates:geometry.coordinates.map(reverseRing)};
+    if(geometry.type==='MultiPolygon')return{type:'MultiPolygon',coordinates:geometry.coordinates.map(poly=>poly.map(reverseRing))};
+    return geometry;
+  };
+  const features=D3_EXTRA_REGIONS.map(item=>({
+    type:'Feature',
+    properties:_d3ExtraProps(item.name),
+    geometry:orientForD3(item.geometry)
+  }));
+  const path=d3.geoPath().projection(projection);
+  const layer=g.append('g').attr('class','d3-extra-regions');
+  layer.selectAll('path').data(features).enter().append('path')
+    .attr('d',path)
+    .attr('fill',d=>_getD3Color(d))
+    .attr('stroke','rgba(255,255,255,.42)')
+    .attr('stroke-width',1)
+    .attr('stroke-linejoin','round')
+    .attr('stroke-linecap','round')
+    .style('cursor','pointer')
+    .style('transition','all 0.2s ease')
+    .on('mouseover',function(){d3.select(this).attr('stroke','rgba(255,255,255,.9)').attr('stroke-width',2).style('filter','brightness(1.25) drop-shadow(0 0 8px rgba(255,255,255,.28))');})
+    .on('mousemove',(e,d)=>{const p=d.properties;const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=p.ru_name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e,true);})
+    .on('mouseout',function(){d3.select(this).attr('stroke','rgba(255,255,255,.42)').attr('stroke-width',1).style('filter','none');})
+    .on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');})
+    .on('click',(e,d)=>{const p=d.properties;let details='<strong>'+p.ru_name+'</strong><br>';details+='📊 Индекс риска: '+p.score+'<br>';details+='🦽 Обеспечение ТСР: '+p.tsr.toFixed(1)+'%<br>';details+='💰 Освоение бюджета: '+p.budget.toFixed(1)+'%<br>';details+='⏰ Просрочено: '+p.overdue.toFixed(1)+'%';showRegionPanel(p.ru_name,details);});
+}
+
 function renderMapD3(){
   console.log('renderMapD3 called, mode:',_mapD3Mode);
   const container=qs('#mapD3Container');
@@ -387,7 +559,7 @@ function renderMapD3(){
     container.innerHTML='<div style="display:flex;flex-direction:column;height:100%;padding:0"><div style="flex:1;position:relative;overflow:hidden;border-radius:8px;background:var(--surface);min-height:0"><svg id="d3Map" style="width:100%;height:100%"></svg></div></div>';
     const svg=qs('#d3Map');const parentContainer=svg.parentElement.parentElement;const W=Math.max(parentContainer.clientWidth-20,600);const H=Math.max(parentContainer.clientHeight-20||500,450);
     svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const g=d3.select('#d3Map').append('g');const geojson=topojson.feature(window.RUSSIA_TOPO,window.RUSSIA_TOPO.objects.default);console.log('GeoJSON features:',geojson.features.length);const projection=d3.geoConicEqualArea().rotate([-105,0]).center([0,65]).parallels([50,75]).fitSize([W,H],geojson);const path=d3.geoPath().projection(projection);
-    g.selectAll('path').data(geojson.features).enter().append('path').attr('d',path).attr('fill',d=>_getD3Color(d)).attr('stroke','rgba(255,255,255,.35)').attr('stroke-width',1).style('cursor','pointer').style('transition','all 0.2s ease').on('mouseover',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.8)').attr('stroke-width',2).style('filter','brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,.3))');}).on('mousemove',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=name;tt.querySelector('#ttFo').textContent='';tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.style.left=(e.clientX+18)+'px';tt.style.top=(e.clientY-20)+'px';tt.classList.add('tt-show');}).on('mouseout',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.5).style('filter','none');}).on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');}).on('click',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';let details='<strong>'+name+'</strong><br>';details+='📊 Индекс риска: '+(p.score||'—')+'<br>';details+='🦽 Обеспечение ТСР: '+(p.tsr?p.tsr.toFixed(1):'—')+'%<br>';details+='💰 Освоение бюджета: '+(p.budget||'—')+'%<br>';details+='⏰ Просрочено: '+(p.overdue?p.overdue.toFixed(1):'—')+'%';showRegionPanel(name,details);});console.log('✓ D3 map rendered');
+    g.selectAll('path').data(geojson.features).enter().append('path').attr('d',path).attr('fill',d=>_getD3Color(d)).attr('stroke','rgba(255,255,255,.35)').attr('stroke-width',1).style('cursor','pointer').style('transition','all 0.2s ease').on('mouseover',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.8)').attr('stroke-width',2).style('filter','brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,.3))');}).on('mousemove',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e);}).on('mouseout',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.5).style('filter','none');}).on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');}).on('click',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';let details='<strong>'+name+'</strong><br>';details+='📊 Индекс риска: '+(p.score||'—')+'<br>';details+='🦽 Обеспечение ТСР: '+(p.tsr?p.tsr.toFixed(1):'—')+'%<br>';details+='💰 Освоение бюджета: '+(p.budget||'—')+'%<br>';details+='⏰ Просрочено: '+(p.overdue?p.overdue.toFixed(1):'—')+'%';showRegionPanel(name,details);});renderD3ExtraRegions(g,projection);console.log('✓ D3 map rendered');
   }catch(err){
     console.error('Error rendering D3 map:',err);
     container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)"><div style="text-align:center"><p>Ошибка при загрузке карты</p><p style="font-size:12px">'+err.message+'</p></div></div>';
@@ -459,12 +631,15 @@ async function loadRussiaTopo(){
 
 function init(){
   document.querySelectorAll('.map-switcher-btn[data-map]').forEach(btn=>btn.addEventListener('click',function(){switchMap(this.dataset.map);}));
+  document.querySelectorAll('[data-panel]').forEach(btn=>btn.addEventListener('click',function(){switchPanelMode(this.dataset.panel);}));
   document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',function(){switchD3Mode(this.dataset.mode);}));
   qs('#mbarReset').addEventListener('click',function(){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_updateMbarStat();});
   const themeSw=document.querySelector('.theme-sw');
   if(themeSw){themeSw.addEventListener('click',function(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';applyTheme(t);});}
   _mapD3Mode='score';
   console.log('init() complete, D3 mode set to',_mapD3Mode);
+  renderMetricTree();
+  switchPanelMode('region');
   renderMapGrid();
   switchMap('grid');
 }

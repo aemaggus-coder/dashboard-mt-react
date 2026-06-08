@@ -20,7 +20,7 @@ function DashboardLayout() {
 
 function MapRedirect() {
   useEffect(() => {
-    window.location.href = '/map.html';
+    window.location.replace('/map.html');
   }, []);
   return null;
 }

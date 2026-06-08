@@ -4,8 +4,15 @@ import { BASE } from '../lib/constants';
 
 export default function EmployChart() {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [mode, setMode] = useState('group');
   const scaledData = useScaledData(BASE.employ, ['working', 'notWorking']);
-  const { labels, working, notWorking } = scaledData;
+  const okvedData = {
+    labels: ['Обрабатывающие', 'Торговля', 'Соц. услуги'],
+    working: [310, 245, 198],
+    notWorking: [142, 126, 92],
+  };
+  const activeData = mode === 'group' ? scaledData : okvedData;
+  const { labels, working, notWorking } = activeData;
   const maxTotal = Math.max(...labels.map((_, idx) => working[idx] + notWorking[idx]));
   const chartHeight = 196;
 
@@ -19,11 +26,21 @@ export default function EmployChart() {
 
   return (
     <div className="employ-chart">
-      <div className="employ-legend" aria-hidden="true">
-        <span><i className="employ-dot employ-dot-work" />Работают</span>
-        <span><i className="employ-dot employ-dot-nowork" />Не работают</span>
+      <div className="employ-head">
+        <div className="card-toggle employ-toggle" role="group" aria-label="Режим занятости">
+          <button className={`card-toggle-btn ${mode === 'group' ? 'active' : ''}`} onClick={() => setMode('group')}>
+            Группа
+          </button>
+          <button className={`card-toggle-btn ${mode === 'okved' ? 'active' : ''}`} onClick={() => setMode('okved')}>
+            ОКВЭД
+          </button>
+        </div>
+        <div className="employ-legend" aria-hidden="true">
+          <span><i className="employ-dot employ-dot-work" />Работают</span>
+          <span><i className="employ-dot employ-dot-nowork" />Не работают</span>
+        </div>
       </div>
-      <svg className="employ-bars" viewBox="0 0 360 242" role="img" aria-label="Группы трудоустройства">
+      <svg className="employ-bars" viewBox="0 0 360 242" role="img" aria-label={mode === 'group' ? 'Занятость по группам' : 'Топ 3 ОКВЭД по занятости'}>
         <line className="employ-axis" x1="16" y1="204" x2="344" y2="204" />
         {[126, 234].map((x) => (
           <line key={x} className="employ-tick" x1={x} y1="204" x2={x} y2="208" />
@@ -65,7 +82,7 @@ export default function EmployChart() {
                 onFocus={() => setHoveredItem({ group: group.name, label: 'Не работают', value: group.notWorking, idx, color: '#9bbdf6' })}
                 onBlur={() => setHoveredItem(null)}
               />
-              <text className="employ-label" x={x + 24} y="230" textAnchor="middle">{group.name}</text>
+              <text className={`employ-label ${mode === 'okved' ? 'employ-label-okved' : ''}`} x={x + 24} y="230" textAnchor="middle">{group.name}</text>
             </g>
           );
         })}

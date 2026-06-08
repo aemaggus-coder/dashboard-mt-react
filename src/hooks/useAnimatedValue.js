@@ -2,14 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 
 export function useAnimatedValue(targetValue, duration = 600) {
   const [displayValue, setDisplayValue] = useState(targetValue);
-  const startValueRef = useRef(displayValue);
+  const displayValueRef = useRef(displayValue);
+  const startValueRef = useRef(targetValue);
   const animationRef = useRef(null);
   const startTimeRef = useRef(null);
 
   useEffect(() => {
-    if (displayValue === targetValue) return;
+    displayValueRef.current = displayValue;
+  }, [displayValue]);
 
-    startValueRef.current = displayValue;
+  useEffect(() => {
+    const currentValue = displayValueRef.current;
+
+    if (currentValue === targetValue) return;
+
+    startValueRef.current = currentValue;
     startTimeRef.current = null;
 
     const animate = (timestamp) => {
@@ -19,6 +26,7 @@ export function useAnimatedValue(targetValue, duration = 600) {
       const progress = Math.min(elapsed / duration, 1);
 
       const newValue = startValueRef.current + (targetValue - startValueRef.current) * easeInOutQuad(progress);
+      displayValueRef.current = newValue;
       setDisplayValue(newValue);
 
       if (progress < 1) {

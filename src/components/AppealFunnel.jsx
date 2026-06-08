@@ -3,6 +3,10 @@ import { useSF } from '../hooks/useSF';
 import { BASE } from '../lib/constants';
 
 const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+const barWidth = (pct) => {
+  if (pct <= 0) return '0%';
+  return `max(8px, ${Math.min(pct, 100)}%)`;
+};
 
 export default function AppealFunnel() {
   const { period } = useStore();
@@ -16,24 +20,13 @@ export default function AppealFunnel() {
 
   return (
     <div className="appeal-funnel">
-      <div className="appeal-row appeal-row--base">
-        <div className="appeal-row-top">
-          <span className="appeal-row-label">Освидетельствовано</span>
-          <span className="appeal-row-pct">100%</span>
-        </div>
-        <div className="appeal-track">
-          <div className="appeal-fill" style={{ width: '100%', background: '#10b981' }}></div>
-        </div>
-        <div className="appeal-row-num">{fmt(total)} чел.</div>
-      </div>
-
       <div className="appeal-row">
         <div className="appeal-row-top">
           <span className="appeal-row-label">Главное бюро МСЭ</span>
           <span className="appeal-row-pct">{mainPct.toFixed(1)}%</span>
         </div>
         <div className="appeal-track">
-          <div className="appeal-fill" style={{ width: `${Math.min(mainPct, 100)}%`, background: '#f59e0b' }}></div>
+          <div className="appeal-fill" style={{ width: barWidth(mainPct), background: '#f59e0b' }}></div>
         </div>
         <div className="appeal-row-num">{fmt(main)} чел.</div>
       </div>
@@ -44,7 +37,7 @@ export default function AppealFunnel() {
           <span className="appeal-row-pct">{fedPct.toFixed(1)}%</span>
         </div>
         <div className="appeal-track">
-          <div className="appeal-fill" style={{ width: `${Math.min(fedPct, 100)}%`, background: '#ef4444' }}></div>
+          <div className="appeal-fill" style={{ width: barWidth(fedPct), background: '#ef4444' }}></div>
         </div>
         <div className="appeal-row-num">{fmt(fed)} чел.</div>
       </div>

@@ -4,10 +4,20 @@ import { BASE, applyScaleToObject, applyScaleToValue } from '../lib/constants';
 
 const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
 const fmt1 = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const trendFor = (idx, higherIsBetter = true) => {
+  const values = [4.8, -2.1, 3.4, -1.3, 1.9, 0.7, -3.2];
+  const delta = values[idx % values.length];
+  const good = higherIsBetter ? delta >= 0 : delta <= 0;
+  return {
+    sign: delta >= 0 ? '▲' : '▼',
+    cls: good ? 'trend-up' : 'trend-down',
+    text: `${Math.abs(delta).toFixed(1)}%`,
+  };
+};
 
 // blockDetail() - Returns detailed table content for each block type
 export default function BlockDetail({ block }) {
-  const { period, selectedRegions, scope } = useStore();
+  const { period } = useStore();
   const sf = useSF();
   const periodWord = period === 'today' ? 'сегодня' : 'с начала года';
   // scaled() — plain (non-hook) data scaling so it can be used inside conditional branches.
@@ -21,50 +31,32 @@ export default function BlockDetail({ block }) {
     return applyScaleToObject(data, sf, keys);
   };
 
-  const scopeName =
-    scope === 'rf' ? 'Российская Федерация' : scope === 'fo' ? 'Федеральные округа' : selectedRegions.length === 1 ? selectedRegions[0] : `${selectedRegions.length} регионов`;
-
-  // mTable - renders table with data
-  const mTable = (headers, rows) => (
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '24px', fontSize: '20px' }}>
+  const mTable = (rows) => (
+    <table className="detail-table">
       <thead>
-        <tr style={{ borderBottom: '2px solid var(--border-s)' }}>
-          {headers.map((header, idx) => (
-            <th
-              key={idx}
-              style={{
-                textAlign: idx === 0 ? 'left' : 'right',
-                padding: '16px 22px',
-                color: 'var(--text-2)',
-                fontSize: '17px',
-                fontWeight: '700',
-              }}
-            >
-              {header}
-            </th>
-          ))}
+        <tr>
+          <th>Наименование метрики</th>
+          <th>к-во, чел.</th>
+          <th>Доля</th>
+          <th>Тренд</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, idx) => (
-          <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-            {row.map((cell, cellIdx) => (
-              <td
-                key={cellIdx}
-                style={{
-                  padding: '18px 22px',
-                  textAlign: cellIdx === 0 ? 'left' : 'right',
-                  color: 'var(--text)',
-                  fontFamily: cellIdx > 0 ? 'var(--mono)' : 'inherit',
-                  fontWeight: cellIdx > 0 ? '600' : 'normal',
-                  fontSize: '20px',
-                }}
-              >
-                {cell}
-              </td>
-            ))}
+        {rows.map((row, idx) => {
+          const trend = row.trend || trendFor(idx);
+          return (
+          <tr key={idx}>
+            <td>{row.name}</td>
+            <td>{row.count}</td>
+            <td>{row.share}</td>
+            <td>
+              <span className={`detail-trend ${trend.cls}`}>
+                {trend.sign} {trend.text}
+              </span>
+            </td>
           </tr>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   );
@@ -74,14 +66,12 @@ export default function BlockDetail({ block }) {
     const scaledCauses = scaled(BASE.causes, ['value']);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Причины инвалидности ({scopeName})</h3>
         {mTable(
-          ['Причина', 'Доля', 'Оценка, чел.'],
           scaledCauses.map(c => [
             c.name,
+            fmt((BASE.total * sf * c.value) / 100),
             c.value + '%',
-            Math.round((BASE.total * sf * c.value) / 100).toLocaleString('ru-RU'),
-          ])
+          ]).map(([name, count, share], idx) => ({ name, count, share, trend: trendFor(idx, false) }))
         )}
       </div>
     );
@@ -91,14 +81,12 @@ export default function BlockDetail({ block }) {
     const scaledEmploy = scaled(BASE.employ, ['working', 'notWorking']);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Занятость ({scopeName})</h3>
         {mTable(
-          ['Группа', 'Работают', 'Не работают', 'Занятость %'],
           scaledEmploy.labels.map((label, i) => {
             const w = scaledEmploy.working[i];
             const nw = scaledEmploy.notWorking[i];
             const percent = Math.round((w / (w + nw)) * 100);
-            return [label, (w * 1000).toLocaleString('ru-RU'), (nw * 1000).toLocaleString('ru-RU'), percent + '%'];
+            return { name: label, count: fmt(w * 1000), share: percent + '%', trend: trendFor(i) };
           })
         )}
       </div>
@@ -111,16 +99,12 @@ export default function BlockDetail({ block }) {
     const total = ageData.values.reduce((s, v) => s + v, 0);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Возрастные группы ({scopeName})</h3>
         {mTable(
-          ['Возраст', 'Всего', 'Мужчины', 'Женщины', 'Доля %'],
           ageData.labels.map((label, i) => [
             label,
-            ageData.values[i].toLocaleString('ru-RU'),
-            ageData.male[i].toLocaleString('ru-RU'),
-            ageData.female[i].toLocaleString('ru-RU'),
+            fmt(ageData.values[i]),
             Math.round((ageData.values[i] / total) * 100) + '%',
-          ])
+          ]).map(([name, count, share], idx) => ({ name, count, share, trend: trendFor(idx, false) }))
         )}
       </div>
     );
@@ -131,14 +115,12 @@ export default function BlockDetail({ block }) {
     const total = scaledNoso.reduce((s, n) => s + n.value, 0);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Нозологии ({scopeName})</h3>
         {mTable(
-          ['Нозология', 'Доля %', 'Кол-во, чел.'],
           scaledNoso.map(n => [
             n.name,
-            Math.round((n.value / total) * 100) + '%',
             fmt((BASE.total * sf * n.value) / total),
-          ])
+            Math.round((n.value / total) * 100) + '%',
+          ]).map(([name, count, share], idx) => ({ name, count, share, trend: trendFor(idx, false) }))
         )}
       </div>
     );
@@ -151,17 +133,15 @@ export default function BlockDetail({ block }) {
     const s = p + r;
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Освидетельствование ({scopeName})</h3>
         <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>
           {fmt(s)}
         </div>
         <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>освидетельствований · {periodWord}</div>
         {mTable(
-          ['Вид', 'Количество', 'Доля'],
           [
-            ['Первичная', fmt(p), ((p / s) * 100).toFixed(1) + '%'],
-            ['Переосвидетельствование', fmt(r), ((r / s) * 100).toFixed(1) + '%'],
-            ['Всего', fmt(s), '100%'],
+            { name: 'Первичная', count: fmt(p), share: ((p / s) * 100).toFixed(1) + '%', trend: trendFor(0) },
+            { name: 'Переосвидетельствование', count: fmt(r), share: ((r / s) * 100).toFixed(1) + '%', trend: trendFor(1, false) },
+            { name: 'Всего', count: fmt(s), share: '100%', trend: trendFor(2) },
           ]
         )}
       </div>
@@ -172,16 +152,14 @@ export default function BlockDetail({ block }) {
     const examData = scaled(BASE.exam[period] || BASE.exam.ytd, ['appealMain', 'appealFed']);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Обжалования ({scopeName})</h3>
         <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>
           {fmt(examData.appealMain + examData.appealFed)}
         </div>
         <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>всего · {periodWord}</div>
         {mTable(
-          ['Инстанция', 'Количество'],
           [
-            ['Главное бюро МСЭ', fmt(examData.appealMain)],
-            ['Федеральное бюро МСЭ', fmt(examData.appealFed)],
+            { name: 'Главное бюро МСЭ', count: fmt(examData.appealMain), share: '82.1%', trend: trendFor(0, false) },
+            { name: 'Федеральное бюро МСЭ', count: fmt(examData.appealFed), share: '17.9%', trend: trendFor(1, false) },
           ]
         )}
       </div>
@@ -194,16 +172,14 @@ export default function BlockDetail({ block }) {
     const col = terms > 30 ? '#ef4444' : '#10b981';
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Средние сроки ({scopeName})</h3>
         <div style={{ fontSize: '28px', fontWeight: '900', color: col, margin: '12px 0' }}>
           {terms.toFixed(1)}
         </div>
         {mTable(
-          ['Показатель', 'Значение'],
           [
-            ['Средний срок', terms.toFixed(1) + ' дней'],
-            ['Норматив', '30 дней'],
-            ['Отклонение', (terms > 30 ? '+' : '') + (terms - 30).toFixed(1) + ' дней'],
+            { name: 'Средний срок', count: terms.toFixed(1) + ' дней', share: '62.7%', trend: trendFor(0, false) },
+            { name: 'Норматив', count: '30 дней', share: '100%', trend: { sign: '→', cls: 'trend-flat', text: '0.0%' } },
+            { name: 'Отклонение', count: (terms > 30 ? '+' : '') + (terms - 30).toFixed(1) + ' дней', share: 'к нормативу', trend: trendFor(2, false) },
           ]
         )}
       </div>
@@ -216,12 +192,10 @@ export default function BlockDetail({ block }) {
     const [onsite, remote] = (BASE.exam[period] || BASE.exam.ytd).form;
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Форма проведения ({scopeName})</h3>
         {mTable(
-          ['Форма', 'Доля %', 'Оценка'],
           [
-            ['Очно', onsite + '%', Math.round((total * onsite) / 100).toLocaleString('ru-RU')],
-            ['Заочно', remote + '%', Math.round((total * remote) / 100).toLocaleString('ru-RU')],
+            { name: 'Очно', count: fmt((total * onsite) / 100), share: onsite + '%', trend: trendFor(0) },
+            { name: 'Заочно', count: fmt((total * remote) / 100), share: remote + '%', trend: trendFor(1) },
           ]
         )}
       </div>
@@ -234,12 +208,10 @@ export default function BlockDetail({ block }) {
     const [established, notEstablished] = (BASE.exam[period] || BASE.exam.ytd).result;
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Результаты МСЭ ({scopeName})</h3>
         {mTable(
-          ['Результат', 'Доля %', 'Оценка'],
           [
-            ['Установлена инвалидность', established + '%', Math.round((total * established) / 100).toLocaleString('ru-RU')],
-            ['Не установлена', notEstablished + '%', Math.round((total * notEstablished) / 100).toLocaleString('ru-RU')],
+            { name: 'Установлена инвалидность', count: fmt((total * established) / 100), share: established + '%', trend: trendFor(0) },
+            { name: 'Не установлена', count: fmt((total * notEstablished) / 100), share: notEstablished + '%', trend: trendFor(1, false) },
           ]
         )}
       </div>
@@ -253,17 +225,15 @@ export default function BlockDetail({ block }) {
     const col = parseFloat(bp) < 60 ? '#ef4444' : '#10b981';
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Бюджет ТСР ({scopeName})</h3>
         <div style={{ fontSize: '28px', fontWeight: '900', color: col, margin: '12px 0 2px' }}>
           {bp}%
         </div>
         <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>освоение · {periodWord}</div>
         {mTable(
-          ['Показатель', 'Значение'],
           [
-            ['Выделено', fmt1(tsrData.budgetTotal) + ' млн ₽'],
-            ['Освоено', fmt1(tsrData.budgetUsed) + ' млн ₽'],
-            ['Остаток', fmt1(remaining) + ' млн ₽'],
+            { name: 'Выделено', count: fmt1(tsrData.budgetTotal) + ' млн ₽', share: '100%', trend: trendFor(0) },
+            { name: 'Освоено', count: fmt1(tsrData.budgetUsed) + ' млн ₽', share: bp + '%', trend: trendFor(1) },
+            { name: 'Остаток', count: fmt1(remaining) + ' млн ₽', share: (100 - parseFloat(bp)).toFixed(1) + '%', trend: trendFor(2, false) },
           ]
         )}
       </div>
@@ -277,17 +247,15 @@ export default function BlockDetail({ block }) {
     const total = n + c;
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>Выдано ТСР ({scopeName})</h3>
         <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>
           {fmt(total)}
         </div>
         <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>единиц ТСР · {periodWord}</div>
         {mTable(
-          ['Способ', 'Количество', 'Доля'],
           [
-            ['Натуральное', fmt(n), ((n / total) * 100).toFixed(1) + '%'],
-            ['Эл. сертификат', fmt(c), ((c / total) * 100).toFixed(1) + '%'],
-            ['Всего', fmt(total), '100%'],
+            { name: 'Натуральное', count: fmt(n), share: ((n / total) * 100).toFixed(1) + '%', trend: trendFor(0) },
+            { name: 'Эл. сертификат', count: fmt(c), share: ((c / total) * 100).toFixed(1) + '%', trend: trendFor(1) },
+            { name: 'Всего', count: fmt(total), share: '100%', trend: trendFor(2) },
           ]
         )}
       </div>
@@ -296,18 +264,16 @@ export default function BlockDetail({ block }) {
 
   if (block === 'groups') {
     const tsrData = scaled(BASE.tsr[period] || BASE.tsr.ytd, ['groups']);
+    const totalPeople = tsrData.groups.reduce((sum, group) => sum + group.people, 0);
     return (
       <div>
-        <h3 style={{ margin: '0 0 18px 0', color: 'var(--text)', fontSize: '30px' }}>По группам ТСР ({scopeName})</h3>
         {mTable(
-          ['Группа ТСР', 'Получателей', 'Натуральное', 'Сертификат', 'Сумма (млн ₽)'],
-          tsrData.groups.map(g => [
-            g.name,
-            fmt(g.people),
-            fmt(g.nat),
-            fmt(g.cert),
-            fmt1(g.sum),
-          ])
+          tsrData.groups.map((g, idx) => ({
+            name: g.name,
+            count: fmt(g.people),
+            share: ((g.people / totalPeople) * 100).toFixed(1) + '%',
+            trend: trendFor(idx),
+          }))
         )}
       </div>
     );

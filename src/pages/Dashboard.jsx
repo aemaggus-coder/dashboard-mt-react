@@ -68,22 +68,21 @@ export default function Dashboard() {
       const inval = Math.round(tx * d.result[0] / 100);
       const pp = PREV_EXAM[period] || PREV_EXAM.today;
       data = [
-        { label: 'Освидетельствований', value: tx, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(tx, pp.tx * f, true) },
-        { label: 'Обжалования', value: ap, note: ar > 6 ? 'повышенный уровень' : 'норма', status: ar > 6 ? 'warn' : 'ok', trend: makeTrend(ap, pp.ap * f, true) },
-        { label: 'Инвалидность установлена', value: inval, note: 'по результатам МСЭ', status: 'ok', trend: makeTrend(inval, pp.inval, true) },
+        { label: 'Освидетельствовано', value: tx, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(tx, pp.tx * f, true) },
+        { label: 'Установлено', value: inval, note: 'инвалидность', status: 'ok', trend: makeTrend(inval, pp.inval, true) },
+        { label: 'Обжаловано', value: ap, note: ar > 6 ? 'повышенный уровень' : 'норма', status: ar > 6 ? 'warn' : 'ok', trend: makeTrend(ap, pp.ap * f, true) },
       ];
     } else if (activeTab === 'tsr') {
       const d = BASE.tsr[period] || BASE.tsr.today;
-      const budgetUsed = jit(d.budgetUsed);
-      const up = budgetUsed / d.budgetTotal * 100;
       const issNat = jit(d.issuedNat), issCert = jit(d.issuedCert);
       const iss = (issNat + issCert) * f;
+      const people = d.groups.reduce((sum, group) => sum + group.people, 0) * f;
       const cp = issCert / (issNat + issCert) * 100;
       const pp = PREV_TSR[period] || PREV_TSR.today;
       data = [
-        { label: 'Освоение бюджета', value: up, decimals: 1, suffix: '%', note: up < 60 ? 'низкий темп' : 'норма', status: up < 60 ? 'risk' : 'ok', trend: makeTrend(up, pp.up, true) },
-        { label: 'Выдано ТСР', value: iss, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(iss, pp.iss * f, true) },
-        { label: 'Остаток средств', value: (d.budgetTotal - budgetUsed) * f, suffix: ' млн', note: 'не освоено', status: up < 60 ? 'warn' : 'ok', trend: null },
+        { label: 'Обеспечено инвалидов', value: people, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(people, pp.iss * 0.28 * f, true) },
+        { label: 'Выдано всего ТСР', value: iss, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(iss, pp.iss * f, true) },
+        { label: 'Выдано натур', value: issNat * f, note: 'натуральная выдача', status: 'ok', trend: makeTrend(issNat * f, pp.iss * 0.54 * f, true) },
         { label: 'Эл. сертификаты', value: cp, decimals: 1, suffix: '%', note: 'цифровизация', status: 'ok', trend: makeTrend(cp, pp.cp, true) },
       ];
     }
@@ -113,10 +112,10 @@ export default function Dashboard() {
           <Card id="card-age" label="Демография" title="Возрастные группы" detailsContent={<BlockDetail block="age" />}>
             <AgeChart />
           </Card>
-          <Card id="card-employ" label="Занятость" title="Группы трудоустройства" detailsContent={<BlockDetail block="employ" />}>
+          <Card id="card-employ" label="Труд и занятость" title="Занятость" detailsContent={<BlockDetail block="employ" />}>
             <EmployChart />
           </Card>
-          <Card id="card-noso" label="Нозологии" title="Нозологии" detailsContent={<BlockDetail block="noso" />}>
+          <Card id="card-noso" label="Нозологии" title="Нозологический профиль" detailsContent={<BlockDetail block="noso" />}>
             <NosoList />
           </Card>
         </div>
@@ -136,7 +135,7 @@ export default function Dashboard() {
           <Card id="card-appeal" label="Несогласие" title="Обжалования" detailsContent={<BlockDetail block="appeal" />}>
             <AppealFunnel />
           </Card>
-          <Card id="card-terms" label="Сроки" title="Средний срок рассмотрения" detailsContent={<BlockDetail block="terms" />}>
+          <Card id="card-terms" label="Эффективность" title="Эффективность" detailsContent={<BlockDetail block="terms" />}>
             <TermsStats />
           </Card>
         </div>
@@ -144,11 +143,11 @@ export default function Dashboard() {
 
       {activeTab === 'tsr' && (
         <div className="view active" id="view-tsr">
-          <Card id="card-budget" label="Бюджет" title="Объем финансирования" detailsContent={<BlockDetail block="budget" />}>
-            <BudgetGauge />
-          </Card>
-          <Card id="card-issued" label="Выданные ТСР" title="Количество техсредств" detailsContent={<BlockDetail block="issued" />}>
+          <Card id="card-issued" label="Выдача" title="Выдача ТСР" detailsContent={<BlockDetail block="issued" />}>
             <IssuedCharts />
+          </Card>
+          <Card id="card-budget" label="Финансирование" title="Финансирование" detailsContent={<BlockDetail block="budget" />}>
+            <BudgetGauge />
           </Card>
           <Card id="card-groups" label="Группы ТСР" title="Распределение по типам" detailsContent={<BlockDetail block="groups" />}>
             <GroupsTable />
