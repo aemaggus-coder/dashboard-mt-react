@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../hooks/useStore';
 import { useSF } from '../hooks/useSF';
 import { BASE, applyScaleToObject, applyScaleToValue } from '../lib/constants';
@@ -17,12 +18,15 @@ const trendFor = (idx, higherIsBetter = true) => {
 
 // blockDetail() - Returns detailed table content for each block type
 export default function BlockDetail({ block }) {
-  const { period } = useStore();
+  const { period, issueMode, setIssueMode } = useStore();
+  const [ageMode, setAgeMode] = useState(() => localStorage.getItem('age-mode') || 'children');
+  const [employMode, setEmployMode] = useState(() => localStorage.getItem('employ-mode') || 'groups');
   const sf = useSF();
   const periodWord = period === 'today' ? 'сегодня' : 'с начала года';
   // scaled() — plain (non-hook) data scaling so it can be used inside conditional branches.
   // Handles both objects and arrays (an array would otherwise be turned into an object by spread).
   const scaled = (data, keys = []) => {
+    if (sf === 1) return data;
     if (Array.isArray(data)) {
       return data.map((item) =>
         item && typeof item === 'object' ? applyScaleToObject(item, sf, keys) : applyScaleToValue(item, sf)
@@ -31,12 +35,12 @@ export default function BlockDetail({ block }) {
     return applyScaleToObject(data, sf, keys);
   };
 
-  const mTable = (rows) => (
+  const mTable = (rows, secondColumnLabel = 'к-во, чел.') => (
     <table className="detail-table">
       <thead>
         <tr>
           <th>Наименование метрики</th>
-          <th>к-во, чел.</th>
+          <th>{secondColumnLabel}</th>
           <th>Доля</th>
           <th>Тренд</th>
         </tr>
@@ -61,6 +65,16 @@ export default function BlockDetail({ block }) {
     </table>
   );
 
+  const selectAgeMode = (mode) => {
+    localStorage.setItem('age-mode', mode);
+    setAgeMode(mode);
+  };
+
+  const selectEmployMode = (mode) => {
+    localStorage.setItem('employ-mode', mode);
+    setEmployMode(mode);
+  };
+
   // blockDetail() cases
   if (block === 'causes') {
     const scaledCauses = scaled(BASE.causes, ['value']);
@@ -79,26 +93,64 @@ export default function BlockDetail({ block }) {
 
   if (block === 'employ') {
     const scaledEmploy = scaled(BASE.employ, ['working', 'notWorking']);
+    const totalOkved = BASE.employ.okved.reduce((sum, item) => sum + item.value, 0);
+    const groupRows = scaledEmploy.labels.map((label, i) => {
+      const w = scaledEmploy.working[i];
+      const nw = scaledEmploy.notWorking[i];
+      const percent = Math.round((w / (w + nw)) * 100);
+      return { name: label, count: fmt(w * 1000), share: percent + '%', trend: trendFor(i) };
+    });
+    const okvedRows = BASE.employ.okved.map((item, idx) => ({
+      name: item.name,
+      count: fmt(item.value * 1000 * sf),
+      share: item.share ? `${item.share.toLocaleString('ru-RU')}%` : `${Math.round((item.value / totalOkved) * 100)}%`,
+      trend: trendFor(idx),
+    }));
+
     return (
       <div>
-        {mTable(
-          scaledEmploy.labels.map((label, i) => {
-            const w = scaledEmploy.working[i];
-            const nw = scaledEmploy.notWorking[i];
-            const percent = Math.round((w / (w + nw)) * 100);
-            return { name: label, count: fmt(w * 1000), share: percent + '%', trend: trendFor(i) };
-          })
-        )}
+        <div className="card-toggle detail-toggle" role="group" aria-label="Детализация занятости">
+          <button
+            type="button"
+            className={`card-toggle-btn ${employMode === 'groups' ? 'active' : ''}`}
+            onClick={() => selectEmployMode('groups')}
+          >
+            Группы
+          </button>
+          <button
+            type="button"
+            className={`card-toggle-btn ${employMode === 'okved' ? 'active' : ''}`}
+            onClick={() => selectEmployMode('okved')}
+          >
+            ОКВЭД
+          </button>
+        </div>
+        {mTable(employMode === 'groups' ? groupRows : okvedRows)}
       </div>
     );
   }
 
   if (block === 'age') {
-    const mode = localStorage.getItem('age-mode') || 'children';
-    const ageData = scaled(BASE.age[mode], ['values', 'male', 'female']);
+    const ageData = scaled(BASE.age[ageMode], ['values', 'male', 'female']);
     const total = ageData.values.reduce((s, v) => s + v, 0);
     return (
       <div>
+        <div className="card-toggle detail-toggle" role="group" aria-label="Детализация демографии">
+          <button
+            type="button"
+            className={`card-toggle-btn ${ageMode === 'children' ? 'active' : ''}`}
+            onClick={() => selectAgeMode('children')}
+          >
+            Дети
+          </button>
+          <button
+            type="button"
+            className={`card-toggle-btn ${ageMode === 'adults' ? 'active' : ''}`}
+            onClick={() => selectAgeMode('adults')}
+          >
+            Взрослые
+          </button>
+        </div>
         {mTable(
           ageData.labels.map((label, i) => [
             label,
@@ -234,7 +286,8 @@ export default function BlockDetail({ block }) {
             { name: 'Выделено', count: fmt1(tsrData.budgetTotal) + ' млн ₽', share: '100%', trend: trendFor(0) },
             { name: 'Освоено', count: fmt1(tsrData.budgetUsed) + ' млн ₽', share: bp + '%', trend: trendFor(1) },
             { name: 'Остаток', count: fmt1(remaining) + ' млн ₽', share: (100 - parseFloat(bp)).toFixed(1) + '%', trend: trendFor(2, false) },
-          ]
+          ],
+          'Сумма, млн.р.'
         )}
       </div>
     );
@@ -264,17 +317,56 @@ export default function BlockDetail({ block }) {
 
   if (block === 'groups') {
     const tsrData = scaled(BASE.tsr[period] || BASE.tsr.ytd, ['groups']);
-    const totalPeople = tsrData.groups.reduce((sum, group) => sum + group.people, 0);
+    const issueCfg = issueMode === 'nat'
+      ? { key: 'nat', className: 'col-nat' }
+      : { key: 'cert', className: 'col-cert' };
     return (
       <div>
-        {mTable(
-          tsrData.groups.map((g, idx) => ({
-            name: g.name,
-            count: fmt(g.people),
-            share: ((g.people / totalPeople) * 100).toFixed(1) + '%',
-            trend: trendFor(idx),
-          }))
-        )}
+        <table className="tsr-table detail-tsr-table">
+          <thead>
+            <tr>
+              <th>Группа ТСР</th>
+              <th>Получателей</th>
+              <th className={`${issueCfg.className} tsr-sub-head tsr-issued-cell`}>
+                <div className="tsr-head-toggle" role="group" aria-label="Тип выдачи ТСР">
+                  <button
+                    className={`tsr-head-toggle-btn ${issueMode === 'nat' ? 'active' : ''}`}
+                    onClick={() => setIssueMode('nat')}
+                    type="button"
+                  >
+                    <span className="tsr-sq tsr-sq-fill"></span>
+                    Натуральные
+                  </button>
+                  <button
+                    className={`tsr-head-toggle-btn ${issueMode === 'cert' ? 'active' : ''}`}
+                    onClick={() => setIssueMode('cert')}
+                    type="button"
+                  >
+                    <span className="tsr-sq tsr-sq-half"></span>
+                    Сертификат
+                  </button>
+                </div>
+              </th>
+              <th className="col-sum">Сумма (млн ₽)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tsrData.groups.map((g, idx) => {
+              const total = (g.nat + g.cert) || 1;
+              const modeSum = issueMode === 'nat'
+                ? g.sum * g.nat / total
+                : g.sum * g.cert / total;
+              return (
+                <tr key={idx}>
+                  <td>{g.name}</td>
+                  <td className="col-people">{fmt(g.people)}</td>
+                  <td className={issueCfg.className}>{fmt(g[issueCfg.key])}</td>
+                  <td className="col-sum">{fmt1(modeSum)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     );
   }

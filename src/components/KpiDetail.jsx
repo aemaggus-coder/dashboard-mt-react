@@ -8,13 +8,22 @@ const fmt = (n, decimals = 0) => {
   });
 };
 
+const fmtRegionValue = (value, decimals = 0, suffix = '') => {
+  if (suffix) return `${fmt(value, decimals)}${suffix}`;
+  const displayValue = value >= 1000 ? value / 1000 : value;
+  return `${fmt(displayValue, displayValue >= 10 ? 0 : 1)} тыс. чел.`;
+};
+
 function topRegionsFor(kpi) {
   const base = typeof kpi.value === 'number' ? Math.abs(kpi.value) : 100000;
+  const seed = Array.from(kpi.label || '').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   return ALL_REGIONS
     .map((region, idx) => {
-      const factor = rfactor(region) * (1.35 + (idx % 7) * 0.045);
+      const rotatedIdx = (idx + seed) % ALL_REGIONS.length;
+      const wave = 0.82 + (((rotatedIdx * 37 + seed * 11) % 71) / 100);
+      const factor = rfactor(`${region}-${kpi.label}`) * wave;
       const value = Math.max(1, base * factor);
-      const delta = [6.2, 4.8, -2.4, 3.1, -1.7][idx % 5];
+      const delta = [6.2, 4.8, -2.4, 3.1, -1.7][(idx + seed) % 5];
       return {
         region,
         value,
@@ -46,7 +55,7 @@ export default function KpiDetail({ kpi }) {
         <div className={`kpi-detail-trend ${trend.cls}`}>
           <span>{trend.sign}</span>
           <strong>{Math.abs(trend.delta || 0).toFixed(1)}%</strong>
-          <em>к пред. периоду</em>
+          <em>{trend.periodLabel || 'к пред. периоду'}</em>
         </div>
       </div>
 
@@ -56,7 +65,7 @@ export default function KpiDetail({ kpi }) {
           <div key={item.region} className="kpi-region-row">
             <span className="kpi-region-rank">{idx + 1}</span>
             <span className="kpi-region-name">{item.region}</span>
-            <span className="kpi-region-value">{fmt(item.value, decimals)}{suffix}</span>
+            <span className="kpi-region-value">{fmtRegionValue(item.value, decimals, suffix)}</span>
             <span className={`kpi-region-trend ${item.trendClass}`}>
               {item.sign} {Math.abs(item.delta).toFixed(1)}%
             </span>

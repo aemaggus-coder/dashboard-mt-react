@@ -2,12 +2,18 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Карта РФ — Центр мониторинга социальной поддержки</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://d3js.org/topojson.v3.min.js"></script>
+<script>
+if (new URLSearchParams(window.location.search).get('embedded') === '1') {
+  document.documentElement.classList.add('embedded-map');
+}
+</script>
 <style>
 :root{
   --bg:#dfe8f0;--surface:#fff;--surface-2:#f0f5fb;
@@ -20,6 +26,7 @@ html[data-theme="dark"]{
   --bg:#313847;--surface:#3d4555;--surface-2:#474f62;
   --border:rgba(255,255,255,.12);--border-s:rgba(255,255,255,.16);
   --text:#ffffff;--text-2:#dde5f0;--text-3:#a8b5cc;
+  --blue:#93c5fd;--blue-l:#bfdbfe;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -27,9 +34,12 @@ html,body{height:100%}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes float{0%{transform:translateY(0px)}50%{transform:translateY(-4px)}100%{transform:translateY(0px)}}
 @keyframes glow{0%{text-shadow:0 0 10px rgba(96,165,250,.5)}50%{text-shadow:0 0 20px rgba(96,165,250,.8)}100%{text-shadow:0 0 10px rgba(96,165,250,.5)}}
+@keyframes regionFocusPulse{0%,100%{box-shadow:0 0 0 2px #f59e0b,0 0 18px rgba(245,158,11,.55)}50%{box-shadow:0 0 0 4px #f59e0b,0 0 34px rgba(245,158,11,.85)}}
 body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;font-size:14px;min-width:1280px}
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+html.embedded-map body{min-width:0}
+html.embedded-map .topbar{display:none}
 .topbar{display:flex;align-items:center;gap:18px;padding:0 28px;height:60px;
   background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 40%,#2563eb 72%,#3b82f6 100%);
   border-bottom:1px solid rgba(255,255,255,.14);
@@ -65,22 +75,33 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 .map-switcher-btn:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff}
 .map-switcher-btn.active{background:rgba(59,130,246,.25);border-color:#60a5fa;color:#60a5fa;
   box-shadow:0 0 20px rgba(96,165,250,.4), inset 0 1px 0 rgba(255,255,255,.1);backdrop-filter:blur(8px)}
+.map-view-toggle{padding:12px 28px 16px;align-items:center;gap:18px}
+.map-view-toggle-track{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid rgba(128,163,204,.22);border-radius:10px;background:rgba(10,22,42,.36);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 30px rgba(2,8,23,.14);backdrop-filter:blur(12px)}
+.map-view-toggle-btn{display:flex;align-items:center;gap:8px;min-width:112px;justify-content:center;border:0;border-radius:7px;padding:8px 13px;color:var(--text-3);background:transparent;box-shadow:none;font-size:12px;font-weight:850;letter-spacing:.1px}
+.map-view-toggle-btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.map-view-toggle-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.map-view-toggle-btn.active{background:linear-gradient(135deg,rgba(96,165,250,.25),rgba(34,197,148,.12));color:#dbeafe;border:0;box-shadow:0 8px 22px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.14);backdrop-filter:none}
 
-.map-view{display:none;flex:1;min-height:450px;gap:12px;overflow:hidden;width:100%;height:100%;flex-direction:row}
+.map-body{display:flex;flex:1;min-height:450px;overflow:hidden;width:100%;height:100%}
+.map-view{display:none;flex:1;min-height:0;gap:12px;overflow:hidden;width:100%;height:100%;flex-direction:row}
+.map-view[data-map="d3"]{background:var(--bg)}
 .map-view.active{display:flex!important}
 
 .mbar{width:256px;flex-shrink:0;display:flex;flex-direction:column;height:100%;
-  background:var(--surface);border-right:1px solid var(--border);overflow:hidden;backdrop-filter:blur(8px)}
-.mbar-mode{padding:12px 12px 10px;border-bottom:1px solid var(--border);background:var(--bg)}
+  background:var(--bg);border-right:1px solid var(--border);overflow:hidden;backdrop-filter:blur(8px)}
+.mbar-select-mode{display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+.mbar-select-mode .mbar-mode-label{margin:0}
+.mbar-select-mode .mbar-mode-actions{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(128,163,204,.22);border-radius:10px;background:rgba(10,22,42,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(12px)}
+.mbar-select-mode .map-switcher-btn{border:0;border-radius:7px;background:transparent;box-shadow:none;padding:8px 13px;color:var(--text-3);font-size:12px;font-weight:850}
+.mbar-select-mode .map-switcher-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.mbar-select-mode .map-switcher-btn.active{background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(34,197,148,.1));color:#dbeafe;box-shadow:0 8px 20px rgba(37,99,235,.14),inset 0 1px 0 rgba(255,255,255,.12);border:0}
 .mbar-mode-label{font-size:10px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
 .mbar-mode-actions{display:flex;gap:7px}
 .mbar-mode-actions .map-switcher-btn{flex:1;padding:7px 8px;font-size:12px}
-.mbar-head{padding:13px 13px 12px;flex-shrink:0;border-bottom:1px solid var(--border);min-height:48px;display:flex;align-items:center;background:var(--bg)}
-.mbar-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3)}
 .mbar-tree{flex:1;overflow-y:auto;padding:6px 0 12px}
 .mbar-tree::-webkit-scrollbar{width:3px}
 .mbar-tree::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:3px}
-.mbar-panel{display:none;flex:1;overflow-y:auto;padding:10px 10px 14px}
+.mbar-panel{display:none;flex:1;overflow-y:auto;padding:10px 10px 14px;background:var(--bg)}
 .mbar-panel.active{display:block}
 .metric-group{padding:8px 0 10px;border-bottom:1px solid var(--border)}
 .metric-group:last-child{border-bottom:none}
@@ -117,23 +138,39 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 
 .mbar-content{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--bg)}
 .mbar-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg);border-top:1px solid var(--border);flex-shrink:0}
-.mbar-reset{font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.3);
-  background:rgba(239,68,68,.12);color:#fca5a5;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);white-space:nowrap;margin-left:auto;position:relative}
-.mbar-reset:hover{background:rgba(239,68,68,.2);border-color:#ef4444;color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.3);transform:translateY(-1px)}
+.mbar-reset{font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid #ef4444;
+  background:transparent;color:#ef4444;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;margin-left:auto;position:relative;letter-spacing:.2px}
+.mbar-reset:hover{background:#ef4444;color:#fff;box-shadow:0 4px 18px rgba(239,68,68,.4);transform:translateY(-1px)}
 .mbar-stat{font-size:11px;color:var(--text-2)}
-.mbar-scroll{flex:1;overflow:auto;padding:14px 16px 16px}
+.mbar-scroll{flex:1;overflow:auto;padding:4px 8px 8px}
 .mbar-scroll::-webkit-scrollbar{width:5px}
 .mbar-scroll::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:5px}
+.rank-panel{width:174px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;padding:10px 7px;background:var(--bg);border-left:1px solid var(--border)}
+.rank-panel::-webkit-scrollbar{width:3px}
+.rank-panel::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:3px}
+.rank-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-3);padding:0 3px 5px}
+.rank-item{display:flex;align-items:center;gap:5px;padding:4px 5px;border-radius:7px;cursor:pointer;transition:background .12s;user-select:none}
+.rank-item:hover{background:var(--surface-2)}
+.rank-num{width:13px;font-size:9px;font-weight:800;color:var(--text-3);text-align:right;flex-shrink:0;font-family:var(--mono)}
+.rank-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.rank-lbl{flex:1;font-size:10px;font-weight:700;color:var(--text-2);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-val{font-size:9px;font-family:var(--mono);font-weight:600;color:var(--text-3);flex-shrink:0}
+.rank-sep{height:1px;background:var(--border);margin:6px 3px}
+.mleg-vals{display:flex;justify-content:space-between;margin-top:3px}
+.mleg-vals span{font-size:9px;font-family:var(--mono);color:var(--text-3);font-weight:600}
 
-.reg-grid{display:grid;grid-template-columns:repeat(27,1fr);grid-template-rows:repeat(13,1fr);gap:3px;width:100%;height:100%;min-height:500px}
-.reg-tile{border-radius:10px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:2px 1px;cursor:pointer;overflow:visible;transition:filter .35s cubic-bezier(.4,0,.2,1),border-color .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s cubic-bezier(.4,0,.2,1);transform:scale(1);position:relative}
+.reg-grid{display:grid;grid-template-columns:repeat(22,1fr);grid-template-rows:repeat(16,1fr);gap:3px;width:100%;height:100%;min-height:500px}
+.reg-tile{border-radius:10px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:20% 1px 0;cursor:pointer;overflow:visible;transition:filter .35s cubic-bezier(.4,0,.2,1),border-color .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s cubic-bezier(.4,0,.2,1);transform:scale(1);position:relative}
 .reg-tile:hover{transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.3), inset 0 0 1px rgba(255,255,255,.2);filter:saturate(1.1);border-color:rgba(255,255,255,.6)!important;z-index:3!important}
 .reg-tile.hovered{transform:scale(1.08)!important;transform-origin:center!important;box-shadow:0 8px 24px rgba(0,0,0,.3), inset 0 0 1px rgba(255,255,255,.2)!important;filter:saturate(1.1)!important;border-color:rgba(255,255,255,.6)!important;z-index:20!important}
 .reg-tile.reg-dimmed{opacity:.22!important;filter:saturate(.2)!important;pointer-events:none}
 .reg-tile.reg-selected{border-color:var(--blue-l)!important;z-index:10!important;box-shadow:0 0 0 2px var(--blue-l),0 0 18px rgba(96,165,250,.55)!important}
+.reg-tile.reg-focus-pulse{border-color:#f59e0b!important;z-index:30!important;animation:regionFocusPulse 1.2s ease-in-out 4!important}
 .reg-name{font-size:6.5px;font-weight:700;text-align:center;line-height:1.2;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}
 .reg-val{font-size:6px;font-family:var(--mono);font-weight:600;opacity:.75;margin-top:1px}
+.d3-region-muted{opacity:.2}
+.d3-region-selected{stroke:#f59e0b!important;stroke-width:3!important;filter:brightness(1.25) drop-shadow(0 0 10px rgba(245,158,11,.55))}
 
 .map-tooltip{position:fixed;z-index:2000;pointer-events:none;opacity:0;transition:opacity .15s;
   background:var(--surface);border:1.5px solid var(--blue);border-radius:9px;padding:9px 12px;
@@ -144,6 +181,49 @@ body{animation:fadeIn .3s ease-in;font-family:'Inter',system-ui,sans-serif;backg
 .map-tt-row{display:flex;align-items:center;gap:8px}
 .map-tt-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
 .map-tt-val{font-size:18px;font-weight:800;font-family:var(--mono);color:var(--blue-l)}
+.selection-badge-value{font-family:var(--mono);font-size:25px;font-weight:900;color:var(--blue-l);white-space:nowrap}
+html[data-theme="dark"] .metric-btn.active,
+html[data-theme="dark"] .map-tt-fo,
+html[data-theme="dark"] .map-tt-val,
+html[data-theme="dark"] .selection-badge-value{color:#dbeafe}
+html[data-theme="dark"] .map-tooltip{border-color:rgba(147,197,253,.72)}
+
+@media (max-width:1180px){
+  body{min-width:0}
+  .app{height:100dvh;min-width:0}
+  .topbar{height:54px;padding:0 16px}
+  .topbar-title{font-size:14px;line-height:1.2}
+  .map-header{padding:12px 16px}
+  .map-title{font-size:18px}
+  .map-switcher,.map-view-toggle{padding-inline:16px}
+  .map-view-toggle{gap:12px}
+  .map-view-toggle-btn{min-width:96px;padding:7px 10px;font-size:11px}
+  .map-body{min-height:0}
+  .mbar{width:220px}
+  .mbar-select-mode{padding:9px}
+  .mbar-select-mode .map-switcher-btn{padding:7px 9px;font-size:11px}
+  .mbar-scroll{padding:10px}
+  .reg-grid{min-height:430px;gap:2px}
+  .reg-name{font-size:5.8px}
+  .reg-val{font-size:5.5px}
+}
+
+@media (max-width:820px){
+  .map-header{display:none}
+  .map-view-toggle{padding:10px;justify-content:center}
+  .map-view-toggle-track{width:100%}
+  .map-view-toggle-btn{flex:1;min-width:0}
+  .map-body{flex-direction:column}
+  .map-view.active{flex-direction:row}
+  .mbar{width:100%;height:210px;border-right:0;border-bottom:1px solid var(--border)}
+  .mbar-content{width:100%;flex:1}
+  .mbar-tree,.mbar-panel{padding-bottom:8px}
+  .mbar-content{min-height:0}
+  .mbar-toolbar{padding:9px 10px}
+  .mbar-scroll{padding:10px;overflow:auto}
+  .reg-grid{min-width:760px;min-height:420px}
+  .map-tooltip{max-width:min(220px,calc(100vw - 24px))}
+}
 
 html[data-theme="light"] .btn-home{color:#fff;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.12)}
 html[data-theme="light"] .btn-home:hover{background:rgba(15,23,42,.15);border-color:rgba(15,23,42,.3)}
@@ -153,9 +233,17 @@ html[data-theme="light"] .theme-knob{background:#0f172a;color:#fff}
 html[data-theme="light"] .map-switcher-btn{color:rgba(15,23,42,.7);background:rgba(15,23,42,.06);border-color:rgba(15,23,42,.1)}
 html[data-theme="light"] .map-switcher-btn:hover{color:#0f172a;background:rgba(15,23,42,.12);border-color:rgba(15,23,42,.2)}
 html[data-theme="light"] .map-switcher-btn.active{background:rgba(37,99,235,.08);color:#1e40af}
+html[data-theme="light"] .map-view-toggle-track{background:rgba(255,255,255,.72);border-color:rgba(126,156,190,.32);box-shadow:0 10px 24px rgba(37,99,235,.08),inset 0 1px 0 rgba(255,255,255,.9)}
+html[data-theme="light"] .map-view-toggle-btn{color:#64748b;background:transparent}
+html[data-theme="light"] .map-view-toggle-btn:hover{color:#164da8;background:rgba(47,115,255,.08)}
+html[data-theme="light"] .map-view-toggle-btn.active{color:#123d88;background:linear-gradient(135deg,rgba(47,115,255,.14),rgba(14,165,233,.08));box-shadow:0 8px 18px rgba(47,115,255,.14),inset 0 1px 0 rgba(255,255,255,.9)}
+html[data-theme="light"] .mbar-select-mode .mbar-mode-actions{background:rgba(255,255,255,.66);border-color:rgba(126,156,190,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.88)}
+html[data-theme="light"] .mbar-select-mode .map-switcher-btn{color:#64748b;background:transparent}
+html[data-theme="light"] .mbar-select-mode .map-switcher-btn:hover{color:#164da8;background:rgba(47,115,255,.08)}
+html[data-theme="light"] .mbar-select-mode .map-switcher-btn.active{color:#123d88;background:linear-gradient(135deg,rgba(47,115,255,.14),rgba(14,165,233,.08));box-shadow:0 8px 18px rgba(47,115,255,.12),inset 0 1px 0 rgba(255,255,255,.9)}
 html[data-theme="light"] .mbar-toolbar{background:var(--bg);border-top-color:var(--border)}
-html[data-theme="light"] .mbar-reset{color:rgba(15,23,42,.7);background:rgba(15,23,42,.06);border-color:rgba(15,23,42,.1)}
-html[data-theme="light"] .mbar-reset:hover{color:#1e40af;background:rgba(15,23,42,.12);border-color:rgba(15,23,42,.2)}
+html[data-theme="light"] .mbar-reset{color:#ef4444;background:transparent;border-color:#ef4444}
+html[data-theme="light"] .mbar-reset:hover{color:#fff;background:#ef4444;border-color:#ef4444}
 html[data-theme="light"] .mbar-stat{color:rgba(15,23,42,.7)}
 html[data-theme="light"] .map-sub{color:#000!important}
 </style>
@@ -180,31 +268,36 @@ html[data-theme="light"] .map-sub{color:#000!important}
     </div>
   </div>
 
-  <div class="map-switcher">
-    <button class="map-switcher-btn active" data-map="grid">🔲 Плитка</button>
-    <button class="map-switcher-btn" data-map="d3">🗺️ Карта</button>
+  <div class="map-switcher map-view-toggle" aria-label="Режим отображения карты">
+    <div class="map-view-toggle-track">
+      <button class="map-switcher-btn map-view-toggle-btn active" data-map="grid" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="4" width="6" height="6" rx="1.5"></rect>
+          <rect x="14" y="4" width="6" height="6" rx="1.5"></rect>
+          <rect x="4" y="14" width="6" height="6" rx="1.5"></rect>
+          <rect x="14" y="14" width="6" height="6" rx="1.5"></rect>
+        </svg>
+        <span>Плитка</span>
+      </button>
+      <button class="map-switcher-btn map-view-toggle-btn" data-map="d3" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"></path>
+          <path d="M9 3v15"></path>
+          <path d="M15 6v15"></path>
+        </svg>
+        <span>Карта</span>
+      </button>
+    </div>
   </div>
 
-  <div class="map-switcher" id="d3ModeButtons" style="display:none;gap:8px;">
-    <span style="flex-shrink:0;color:var(--text-3);font-size:12px;display:flex;align-items:center;">Показывать по:</span>
-    <button class="map-switcher-btn active" data-mode="score">📊 Индекс риска</button>
-    <button class="map-switcher-btn" data-mode="tsr">🦽 Обеспечение ТСР</button>
-    <button class="map-switcher-btn" data-mode="budget">💰 Освоение бюджета</button>
-    <button class="map-switcher-btn" data-mode="overdue">⏰ Просрочено</button>
-  </div>
-
-  <!-- GRID VIEW -->
-  <div class="map-view active" data-map="grid">
+  <div class="map-body">
     <aside class="mbar">
-      <div class="mbar-mode">
+      <div class="mbar-select-mode" aria-label="Режим выбора">
         <div class="mbar-mode-label">Режим выбора</div>
         <div class="mbar-mode-actions">
-          <button class="map-switcher-btn active" data-panel="region">Регион</button>
-          <button class="map-switcher-btn" data-panel="metric">Метрика</button>
+          <button class="map-switcher-btn active" data-panel="region" type="button">Регион</button>
+          <button class="map-switcher-btn" data-panel="metric" type="button">Метрика</button>
         </div>
-      </div>
-      <div class="mbar-head">
-        <div class="mbar-title" id="mbarTitle">Субъекты РФ</div>
       </div>
       <div class="mbar-tree mbar-panel active" id="mbarTree"></div>
       <div class="mbar-panel" id="metricTree"></div>
@@ -214,23 +307,29 @@ html[data-theme="light"] .map-sub{color:#000!important}
           <div class="mleg-bar"></div>
           <span class="mleg-lbl">больше</span>
         </div>
+        <div class="mleg-vals"><span id="mlegMin">—</span><span id="mlegMax">—</span></div>
         <div style="margin-top:6px;font-size:11px;color:var(--text-3)"><span id="mbarTotalLabel">Общая численность</span>: <b id="mbarTotal">—</b></div>
       </div>
     </aside>
     <div class="mbar-content">
+      <!-- GRID VIEW -->
+      <div class="map-view active" data-map="grid">
+        <div class="mbar-scroll">
+          <div class="reg-grid" id="regGrid" role="grid" aria-label="Региональная сетка инвалидов РФ"></div>
+        </div>
+        <div class="rank-panel" id="rankPanel"></div>
+      </div>
+
+      <!-- D3 VIEW -->
+      <div class="map-view" data-map="d3">
+        <div id="mapD3Container" style="width:100%;height:100%;display:flex;flex-direction:column"></div>
+      </div>
+
       <div class="mbar-toolbar">
         <button class="mbar-reset" id="mbarReset">✕ Сбросить</button>
         <span class="mbar-stat" id="mbarStat"></span>
       </div>
-      <div class="mbar-scroll">
-        <div class="reg-grid" id="regGrid" role="grid" aria-label="Региональная сетка инвалидов РФ"></div>
-      </div>
     </div>
-  </div>
-
-  <!-- D3 VIEW -->
-  <div class="map-view" data-map="d3">
-    <div id="mapD3Container" style="width:100%;height:100%;display:flex;flex-direction:column"></div>
   </div>
 </div>
 
@@ -258,38 +357,95 @@ const REGIONS=[
 ];
 
 const REGION_GRID={
-  'Мурманская область':[5,3],'Ненецкий автономный округ':[10,2],'Архангельская область':[8,4],
-  'Республика Карелия':[4,4],'Республика Коми':[11,4],
-  'г. Санкт-Петербург':[3,5],'Ленинградская область':[4,5],'Вологодская область':[8,5],
-  'Псковская область':[3,6],'Новгородская область':[5,6],'Калининградская область':[1,7],
-  'Тверская область':[6,6],'Ярославская область':[8,6],'Костромская область':[9,6],
-  'Ивановская область':[9,7],'Московская область':[7,7],'г. Москва':[7,8],
-  'Владимирская область':[8,7],'Смоленская область':[5,7],'Калужская область':[6,8],
-  'Тульская область':[7,9],'Рязанская область':[8,8],'Орловская область':[6,9],
-  'Брянская область':[4,8],'Курская область':[5,9],'Белгородская область':[5,10],
-  'Липецкая область':[8,9],'Воронежская область':[7,10],'Тамбовская область':[9,9],
-  'Херсонская область':[5,11],'Запорожская область':[6,11],'Донецкая НР':[7,11],'Луганская НР':[8,10],
-  'Республика Крым':[4,12],'г. Севастополь':[4,13],'Краснодарский край':[6,12],
-  'Республика Адыгея':[7,12],'Ростовская область':[8,11],'Волгоградская область':[9,10],
-  'Республика Калмыкия':[9,11],'Астраханская область':[10,11],
-  'Ставропольский край':[8,12],'Карачаево-Черкесская Республика':[7,13],
-  'Кабардино-Балкарская Республика':[8,13],'Республика Северная Осетия — Алания':[9,13],
-  'Республика Ингушетия':[10,13],'Чеченская Республика':[10,12],'Республика Дагестан':[11,12],
-  'Нижегородская область':[10,7],'Кировская область':[12,5],'Республика Марий Эл':[11,6],
-  'Удмуртская Республика':[13,5],'Чувашская Республика':[11,7],'Республика Татарстан':[12,7],
-  'Республика Мордовия':[10,8],'Ульяновская область':[11,8],'Пензенская область':[10,9],
-  'Саратовская область':[11,9],'Самарская область':[12,8],'Оренбургская область':[13,9],
-  'Республика Башкортостан':[13,7],'Пермский край':[13,4],
-  'Свердловская область':[14,5],'Курганская область':[14,7],'Челябинская область':[14,8],
-  'Тюменская область':[15,6],'Ханты-Мансийский АО — Югра':[16,4],'Ямало-Ненецкий АО':[16,2],
-  'Омская область':[16,7],'Томская область':[17,5],'Новосибирская область':[17,7],
-  'Кемеровская область':[18,7],'Алтайский край':[17,8],'Республика Алтай':[18,9],
-  'Красноярский край':[19,4],'Республика Хакасия':[19,7],'Республика Тыва':[19,9],
-  'Иркутская область':[20,6],
-  'Республика Бурятия':[21,7],'Забайкальский край':[21,8],'Республика Саха (Якутия)':[23,3],
-  'Амурская область':[23,7],'Еврейская АО':[24,8],'Хабаровский край':[24,6],
-  'Приморский край':[25,9],'Магаданская область':[25,4],'Сахалинская область':[26,7],
-  'Камчатский край':[26,5],'Чукотский АО':[27,2],
+  'Мурманская область':[3,1],
+  'Ненецкий автономный округ':[6,1],
+  'Ленинградская область':[2,2],
+  'Республика Карелия':[3,2],
+  'Вологодская область':[4,2],
+  'Архангельская область':[5,2],
+  'Республика Коми':[6,2],
+  'г. Санкт-Петербург':[2,3],
+  'Новгородская область':[3,3],
+  'Калининградская область':[1,4],
+  'Псковская область':[2,4],
+  'Смоленская область':[3,6],
+  'Брянская область':[3,7],
+  'Тверская область':[4,5],
+  'Калужская область':[4,6],
+  'Орловская область':[4,7],
+  'Курская область':[4,8],
+  'Ярославская область':[5,4],
+  'г. Москва':[5,5],
+  'Московская область':[5,6],
+  'Тульская область':[5,7],
+  'Липецкая область':[5,8],
+  'Белгородская область':[5,9],
+  'Ивановская область':[6,5],
+  'Владимирская область':[6,6],
+  'Рязанская область':[6,7],
+  'Тамбовская область':[6,8],
+  'Воронежская область':[6,9],
+  'Костромская область':[7,5],
+  'Нижегородская область':[8,7],
+  'Республика Мордовия':[8,8],
+  'Пензенская область':[8,9],
+  'Республика Марий Эл':[9,6],
+  'Чувашская Республика':[9,7],
+  'Ульяновская область':[9,8],
+  'Саратовская область':[9,9],
+  'Кировская область':[10,6],
+  'Республика Татарстан':[10,7],
+  'Самарская область':[10,8],
+  'Оренбургская область':[10,9],
+  'Пермский край':[11,6],
+  'Удмуртская Республика':[11,7],
+  'Республика Башкортостан':[11,8],
+  'Волгоградская область':[9,12],
+  'Республика Калмыкия':[9,13],
+  'Астраханская область':[10,13],
+  'Ростовская область':[8,14],
+  'Краснодарский край':[8,13],
+  'Республика Адыгея':[7,13],
+  'Республика Крым':[6,13],
+  'г. Севастополь':[5,13],
+  'Чеченская Республика':[10,15],
+  'Республика Ингушетия':[10,16],
+  'Республика Дагестан':[11,15],
+  'Ставропольский край':[9,15],
+  'Карачаево-Черкесская Республика':[8,15],
+  'Кабардино-Балкарская Республика':[8,16],
+  'Республика Северная Осетия — Алания':[9,16],
+  'Херсонская область':[4,11],
+  'Запорожская область':[5,11],
+  'Донецкая НР':[6,11],
+  'Луганская НР':[7,11],
+  'Ханты-Мансийский АО — Югра':[13,6],
+  'Ямало-Ненецкий АО':[13,5],
+  'Свердловская область':[13,7],
+  'Курганская область':[14,7],
+  'Челябинская область':[13,8],
+  'Тюменская область':[14,6],
+  'Омская область':[15,9],
+  'Алтайский край':[16,9],
+  'Республика Алтай':[16,10],
+  'Томская область':[16,7],
+  'Новосибирская область':[16,8],
+  'Кемеровская область':[17,7],
+  'Красноярский край':[17,6],
+  'Республика Хакасия':[17,8],
+  'Республика Тыва':[17,9],
+  'Иркутская область':[18,7],
+  'Республика Бурятия':[19,9],
+  'Забайкальский край':[19,10],
+  'Республика Саха (Якутия)':[20,7],
+  'Амурская область':[20,8],
+  'Еврейская АО':[20,9],
+  'Хабаровский край':[21,8],
+  'Приморский край':[21,10],
+  'Магаданская область':[21,7],
+  'Сахалинская область':[22,8],
+  'Камчатский край':[22,6],
+  'Чукотский АО':[21,6],
 };
 
 const SHORT={'Республика Северная Осетия — Алания':'С. Осетия','Кабардино-Балкарская Республика':'КБР','Карачаево-Черкесская Республика':'КЧР','Ханты-Мансийский АО — Югра':'ХМАО','Ямало-Ненецкий АО':'ЯНАО','Ненецкий автономный округ':'НАО','Республика Саха (Якутия)':'Якутия','Республика Башкортостан':'Башкортостан','Республика Татарстан':'Татарстан','Республика Дагестан':'Дагестан','Чеченская Республика':'Чечня','Республика Ингушетия':'Ингушетия','Республика Калмыкия':'Калмыкия','Республика Хакасия':'Хакасия','Республика Бурятия':'Бурятия','Республика Мордовия':'Мордовия','Республика Карелия':'Карелия','Республика Алтай':'Алтай','Республика Тыва':'Тыва','Республика Коми':'Коми','Республика Крым':'Крым','Республика Адыгея':'Адыгея','Республика Марий Эл':'Марий Эл','Удмуртская Республика':'Удмуртия','Чувашская Республика':'Чувашия'};
@@ -297,12 +453,17 @@ const SHORT={'Республика Северная Осетия — Алани�
 function regShort(n){if(SHORT[n])return SHORT[n];return n.replace(/^г\. /,'').replace(/^Республика /,'').replace(/ (область|край|АО)$/,'').replace(/ автономный округ$/,'');}
 
 const qs=s=>document.querySelector(s);
+function mapIssue(type,message,details){
+  window.__MAP_DIAGNOSTICS__=window.__MAP_DIAGNOSTICS__||[];
+  window.__MAP_DIAGNOSTICS__.push({type,message,details});
+}
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 let _mapRegionVals={},_mapValMin=0,_mapValMax=1;
 let _mbarActiveFo=null,_mbarActiveRegion=null;
 let _mapD3Mode='score';
 let _mapPanelMode='region';
 let _mapMetric='population_total';
+let _topoLoadPromise=null;
 
 const MAP_METRIC_GROUPS=[
   {title:'Общие сведения',items:[
@@ -374,14 +535,12 @@ function switchPanelMode(mode){
   document.querySelectorAll('[data-panel]').forEach(btn=>btn.classList.toggle('active',btn.dataset.panel===mode));
   qs('#mbarTree').classList.toggle('active',mode==='region');
   qs('#metricTree').classList.toggle('active',mode==='metric');
-  qs('#mbarTitle').textContent=mode==='region'?'Субъекты РФ':'Метрики';
 }
 
 function switchMetric(key){
   _mapMetric=key;
   const metric=activeMetric();
   _mapD3Mode=metric.d3||'score';
-  document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===_mapD3Mode));
   rebuildMetricValues();
   renderMetricTree();
   renderMapGrid();
@@ -391,27 +550,111 @@ function switchMetric(key){
 function buildMapTree(filter){
   const q=(filter||'').toLowerCase().trim();const tree=qs('#mbarTree');if(!tree)return;let html='';
   REGIONS.forEach(({fo,color,list})=>{const clr=color||'#6c6c70';const visible=q?list.filter(n=>n.toLowerCase().includes(q)||regShort(n).toLowerCase().includes(q)):list;if(!visible.length)return;const foTotal=metricAggregate(visible);const isOpen=(!q&&_mbarActiveFo===fo)||!!q;html+='<div class="mfo-node'+(isOpen?' open':'')+'" data-fo="'+fo+'"><div class="mfo-hdr'+(!q&&_mbarActiveFo===fo?' mfo-active':'')+'"><span class="mfo-chev"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mfo-dot" style="background:'+clr+'"></span><span class="mfo-name">'+fo+'</span><span class="mfo-cnt">'+visible.length+'</span><span class="mfo-tot">'+metricDisplay(foTotal)+'</span></div><div class="mfo-regs">';[...visible].sort((a,b)=>(_mapRegionVals[b]||0)-(_mapRegionVals[a]||0)).forEach(n=>{const c=_mapTileBg(n);const v=_mapRegionVals[n]||0;html+='<div class="mreg-row'+(_mbarActiveRegion===n?' mreg-active':'')+'" data-name="'+n+'" data-fo="'+fo+'"><span class="mreg-heat" style="background:'+c.bg+'"></span><span class="mreg-lbl">'+n+'</span><span class="mreg-num">'+metricDisplay(v)+'</span></div>';});html+='</div></div>';});
-  tree.innerHTML=html;tree.querySelectorAll('.mfo-hdr').forEach(el=>{el.addEventListener('click',function(){const node=this.closest('.mfo-node'),fo=node.dataset.fo;const wasOpen=node.classList.contains('open');node.classList.toggle('open',!wasOpen);_mbarActiveFo=(_mbarActiveFo===fo&&wasOpen)?null:fo;_mbarActiveRegion=null;_refreshMapTiles();_updateMbarStat();});});tree.querySelectorAll('.mreg-row').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const name=this.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=this.dataset.fo;}_refreshMapTiles();if(_mbarActiveRegion){const tile=qs('.reg-tile[data-name="'+_mbarActiveRegion+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});}_updateMbarStat();});});
+  tree.innerHTML=html;tree.querySelectorAll('.mfo-hdr').forEach(el=>{el.addEventListener('click',function(){const node=this.closest('.mfo-node'),fo=node.dataset.fo;const wasOpen=node.classList.contains('open');node.classList.toggle('open',!wasOpen);_mbarActiveFo=(_mbarActiveFo===fo&&wasOpen)?null:fo;_mbarActiveRegion=null;_refreshMapTiles();_syncToStore();_updateMbarStat();});});tree.querySelectorAll('.mreg-row').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const name=this.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=this.dataset.fo;}buildMapTree('');_refreshMapTiles();_syncToStore();if(_mbarActiveRegion){const tile=qs('.reg-tile[data-name="'+_mbarActiveRegion+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});}_updateMbarStat();});});
 }
 
-function _refreshMapTiles(){document.querySelectorAll('.reg-tile').forEach(tile=>{const n=tile.dataset.name,fo=tile.dataset.fo;const isSelected=_mbarActiveRegion===n;tile.classList.remove('reg-dimmed','reg-selected','hovered');tile.setAttribute('aria-selected',isSelected?'true':'false');if(_mbarActiveRegion){tile.classList.add(isSelected?'reg-selected':'reg-dimmed');}else if(_mbarActiveFo){if(fo!==_mbarActiveFo)tile.classList.add('reg-dimmed');}});}
+function regionKey(name){return String(name||'').toLowerCase().replace(/ё/g,'е').replace(/^г\. /,'').replace(/\s+/g,' ').replace(/\s+обл\.$/,' область').replace(/\s+респ\.$/,' республика').replace('республика северная осетия — алания','республика северная осетия').replace('республика северная осетия - алания','республика северная осетия').trim();}
+function regionMatches(a,b){const ak=regionKey(a),bk=regionKey(b);return ak===bk||ak.includes(bk)||bk.includes(ak);}
+function regionGroupForName(name){return REGIONS.find(group=>group.list.some(region=>regionMatches(region,name)));}
+function regionNameForD3(name){const group=regionGroupForName(name);return group?.list.find(region=>regionMatches(region,name))||name;}
+function isSelectedMapRegion(name){
+  if(!name)return false;
+  if(_mbarActiveRegion)return regionMatches(_mbarActiveRegion,name);
+  if(_mbarActiveFo){const group=REGIONS.find(g=>g.fo===_mbarActiveFo);return !!group&&group.list.some(region=>regionMatches(region,name));}
+  return false;
+}
+function syncD3Selection(){
+  const svg=qs('#d3Map');if(!svg||!window.d3)return;
+  const hasSelection=!!(_mbarActiveRegion||_mbarActiveFo);
+  d3.select(svg).selectAll('path').classed('d3-region-muted',d=>hasSelection&&!isSelectedMapRegion(d?.properties?.ru_name||d?.properties?.name)).classed('d3-region-selected',d=>hasSelection&&isSelectedMapRegion(d?.properties?.ru_name||d?.properties?.name));
+}
+function selectRegionFromD3(name){
+  const displayName=regionNameForD3(name);
+  const group=regionGroupForName(name);
+  if(!group)return;
+  if(_mbarActiveRegion&&regionMatches(_mbarActiveRegion,displayName)){_mbarActiveRegion=null;_mbarActiveFo=null;}
+  else{_mbarActiveRegion=displayName;_mbarActiveFo=group.fo;}
+  buildMapTree('');
+  _refreshMapTiles();
+  _updateMbarStat();
+}
+function _syncToStore(){
+  if(_mbarActiveRegion){
+    localStorage.setItem('mintrud-regions',JSON.stringify([_mbarActiveRegion]));
+    localStorage.setItem('mintrud-scope','reg');
+  } else {
+    localStorage.setItem('mintrud-regions','[]');
+    localStorage.setItem('mintrud-scope','rf');
+  }
+}
+function _refreshMapTiles(){document.querySelectorAll('.reg-tile').forEach(tile=>{const n=tile.dataset.name,fo=tile.dataset.fo;const isSelected=_mbarActiveRegion===n;tile.classList.remove('reg-dimmed','reg-selected','hovered');tile.setAttribute('aria-selected',isSelected?'true':'false');if(_mbarActiveRegion){tile.classList.add(isSelected?'reg-selected':'reg-dimmed');}else if(_mbarActiveFo){if(fo!==_mbarActiveFo)tile.classList.add('reg-dimmed');}});syncD3Selection();}
+function _restoreRegionFromStore(){
+  if(_focusRegionFromQuery)return;
+  const saved=JSON.parse(localStorage.getItem('mintrud-regions')||'[]');
+  if(!saved.length||saved.length>1)return;
+  const name=saved[0];
+  const group=REGIONS.find(g=>g.list.includes(name));
+  if(!group)return;
+  _mbarActiveRegion=name;
+  _mbarActiveFo=group.fo;
+  buildMapTree('');
+  _refreshMapTiles();
+  _updateMbarStat();
+  setTimeout(()=>{const tile=qs('.reg-tile[data-name="'+name+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});},200);
+}
+function clearRegionFocusPulse(){document.querySelectorAll('.reg-focus-pulse').forEach(tile=>tile.classList.remove('reg-focus-pulse'));}
+
+function closeSelectionBadge(){
+  const existing=qs('#selectionBadge');
+  if(existing)existing.remove();
+}
+
+function showSelectionBadge({title,value,metric,meta}){
+  closeSelectionBadge();
+  const badge=document.createElement('div');
+  badge.id='selectionBadge';
+  badge.style.cssText='position:fixed;top:78px;right:20px;z-index:1100;min-width:280px;max-width:360px;padding:15px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 16px 40px rgba(0,0,0,.22);color:var(--text);font-family:Inter,system-ui,sans-serif;';
+  badge.innerHTML=
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">'+
+      '<div>'+
+        '<div style="font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);margin-bottom:5px;">Выбранная метрика</div>'+
+        '<div style="font-size:16px;font-weight:900;line-height:1.2;">'+title+'</div>'+
+      '</div>'+
+      '<button type="button" aria-label="Закрыть" style="border:0;background:transparent;color:var(--text-3);font-size:22px;line-height:1;cursor:pointer;padding:0;">×</button>'+
+    '</div>'+
+    '<div style="display:flex;align-items:end;justify-content:space-between;gap:14px;padding-top:9px;border-top:1px solid var(--border);">'+
+      '<div style="min-width:0;">'+
+        '<div style="font-size:12px;color:var(--text-3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+metric+'</div>'+
+        (meta?'<div style="font-size:11px;color:var(--text-3);margin-top:5px;">'+meta+'</div>':'')+
+      '</div>'+
+      '<div class="selection-badge-value">'+value+'</div>'+
+    '</div>';
+  badge.querySelector('button').addEventListener('click',closeSelectionBadge);
+  document.body.appendChild(badge);
+}
 
 function _updateMbarStat(){
   const el=qs('#mbarStat');
   if(!el)return;
   el.innerHTML='';
   if(_mbarActiveRegion){
-    const b=document.createElement('b');
-    b.textContent=_mbarActiveRegion;
-    el.appendChild(b);
-    el.appendChild(document.createTextNode(' · '+metricDisplay(_mapRegionVals[_mbarActiveRegion]||0)+' · '+activeMetric().name));
+    showSelectionBadge({
+      title:_mbarActiveRegion,
+      value:metricDisplay(_mapRegionVals[_mbarActiveRegion]||0),
+      metric:activeMetric().name,
+      meta:_mbarActiveFo||''
+    });
   }else if(_mbarActiveFo){
     const g=REGIONS.find(x=>x.fo===_mbarActiveFo);
     const list=g?g.list:[];
-    const b=document.createElement('b');
-    b.textContent=_mbarActiveFo;
-    el.appendChild(b);
-    el.appendChild(document.createTextNode(' · '+list.length+' субъектов · '+metricDisplay(metricAggregate(list))+' · '+activeMetric().name));
+    showSelectionBadge({
+      title:_mbarActiveFo,
+      value:metricDisplay(metricAggregate(list)),
+      metric:activeMetric().name,
+      meta:list.length+' субъектов'
+    });
+  }else{
+    closeSelectionBadge();
   }
 }
 
@@ -432,14 +675,12 @@ function placeMapTooltip(tt,e,preferLeft=false){
 function initMapTooltip(){const tt=qs('#mapTooltip');const grid=qs('#regGrid');if(!tt||!grid)return;grid.addEventListener('mouseover',function(e){const tile=e.target.closest('.reg-tile');if(tile)tile.classList.add('hovered');});grid.addEventListener('mousemove',function(e){const tile=e.target.closest('.reg-tile');if(!tile){tt.classList.remove('tt-show');return;}tt.querySelector('#ttName').textContent=tile.dataset.name;tt.querySelector('#ttFo').textContent=tile.dataset.fo+' · '+activeMetric().name;tt.querySelector('#ttVal').textContent=tile.dataset.val;tt.querySelector('#ttDot').style.background=tile.dataset.bg;tt.classList.add('tt-show');placeMapTooltip(tt,e);});grid.addEventListener('mouseleave',function(){grid.querySelectorAll('.reg-tile').forEach(t=>t.classList.remove('hovered'));tt.classList.remove('tt-show');});}
 
 function renderMapGrid(){
-  console.log('renderMapGrid() called');
   rebuildMetricValues();
   const tiles=[];REGIONS.forEach(fo=>fo.list.forEach(n=>{const pos=REGION_GRID[n];if(!pos)return;const[c,r]=pos;const v=_mapRegionVals[n]||0;const bg=_mapTileBg(n);const lum=(0.299*bg.r+0.587*bg.g+0.114*bg.b)/255*bg.a;const textCol=lum>0.38?'#1c1c1e':'#f2f2f7';const valCol=lum>0.38?'rgba(28,28,30,.6)':'rgba(242,242,247,.6)';tiles.push('<div class="reg-tile" role="gridcell" tabindex="-1" aria-selected="false" aria-label="'+n+', '+fo.fo+', '+activeMetric().name+', '+metricDisplay(v)+'" data-name="'+n+'" data-fo="'+fo.fo+'" data-val="'+metricDisplay(v)+'" data-bg="'+bg.bg+'" style="grid-column:'+c+';grid-row:'+r+';background:'+bg.bg+';border-color:'+bg.bdr+'"><div class="reg-name" style="color:'+textCol+'">'+regShort(n)+'</div><div class="reg-val" style="color:'+valCol+'">'+metricDisplay(v)+'</div></div>');}));
-  console.log('generated',tiles.length,'tiles');
-  const grid=qs('#regGrid');console.log('grid element:',grid);
-  grid.innerHTML=tiles.join('');console.log('grid innerHTML set');
-  initMapTooltip();qs('#regGrid').addEventListener('click',function(e){const tile=e.target.closest('.reg-tile');if(tile&&tile.classList.contains('reg-dimmed'))return;if(!tile){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_updateMbarStat();return;}const name=tile.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=tile.dataset.fo;}buildMapTree('');_refreshMapTiles();if(_mbarActiveRegion){const row=qs('.mreg-row[data-name="'+_mbarActiveRegion+'"]');if(row)row.scrollIntoView({behavior:'smooth',block:'nearest'});}_updateMbarStat();});
-  buildMapTree('');renderMetricTree();const allRegions=REGIONS.flatMap(g=>g.list);const grandTotal=metricAggregate(allRegions);const te=qs('#mbarTotal');if(te)te.textContent=metricDisplay(grandTotal);const tl=qs('#mbarTotalLabel');if(tl)tl.textContent=activeMetric().name;_refreshMapTiles();_updateMbarStat();
+  const grid=qs('#regGrid');
+  grid.innerHTML=tiles.join('');
+  initMapTooltip();qs('#regGrid').addEventListener('click',function(e){clearRegionFocusPulse();const tile=e.target.closest('.reg-tile');if(tile&&tile.classList.contains('reg-dimmed'))return;if(!tile){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_syncToStore();_updateMbarStat();return;}const name=tile.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=tile.dataset.fo;}buildMapTree('');_refreshMapTiles();_syncToStore();if(_mbarActiveRegion){const row=qs('.mreg-row[data-name="'+_mbarActiveRegion+'"]');if(row)row.scrollIntoView({behavior:'smooth',block:'nearest'});}_updateMbarStat();});
+  buildMapTree('');renderMetricTree();const allRegions=REGIONS.flatMap(g=>g.list);const grandTotal=metricAggregate(allRegions);const te=qs('#mbarTotal');if(te)te.textContent=metricDisplay(grandTotal);const tl=qs('#mbarTotalLabel');if(tl)tl.textContent=activeMetric().name;_refreshMapTiles();_updateMbarStat();renderRankPanel();updateLegendVals();
 }
 
 function applyTheme(t){
@@ -457,23 +698,17 @@ function applyTheme(t){
 }
 
 function switchMap(type){
-  console.log('switchMap('+type+') called');
   document.querySelectorAll('.map-switcher-btn[data-map]').forEach(btn=>btn.classList.toggle('active',btn.dataset.map===type));
   document.querySelectorAll('.map-view').forEach(map=>{
     const isTarget=map.dataset.map===type;
     map.classList.toggle('active',isTarget);
-    console.log('toggling map view:',map.dataset.map,'active:',isTarget);
   });
-  const d3ModeButtons=qs('#d3ModeButtons');
-  if(d3ModeButtons){d3ModeButtons.style.display=type==='d3'?'flex':'none';}
-  if(type==='d3'){console.log('calling renderMapD3');renderMapD3();}
-}
-
-function switchD3Mode(mode){
-  _mapD3Mode=mode;
-  console.log('Switching D3 mode to',mode);
-  document.querySelectorAll('[data-mode]').forEach(btn=>{btn.classList.remove('active');if(btn.dataset.mode===mode)btn.classList.add('active');});
-  renderMapD3();
+  if(type==='d3'){
+    renderMapD3();
+    ensureRussiaTopo().then((loaded)=>{
+      if(loaded&&qs('.map-view[data-map="d3"]').classList.contains('active'))renderMapD3();
+    });
+  }
 }
 
 function _getD3Color(d){
@@ -537,73 +772,42 @@ function renderD3ExtraRegions(g,projection){
     .on('mousemove',(e,d)=>{const p=d.properties;const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=p.ru_name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e,true);})
     .on('mouseout',function(){d3.select(this).attr('stroke','rgba(255,255,255,.42)').attr('stroke-width',1).style('filter','none');})
     .on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');})
-    .on('click',(e,d)=>{const p=d.properties;let details='<strong>'+p.ru_name+'</strong><br>';details+='📊 Индекс риска: '+p.score+'<br>';details+='🦽 Обеспечение ТСР: '+p.tsr.toFixed(1)+'%<br>';details+='💰 Освоение бюджета: '+p.budget.toFixed(1)+'%<br>';details+='⏰ Просрочено: '+p.overdue.toFixed(1)+'%';showRegionPanel(p.ru_name,details);});
+    .on('click',(e,d)=>{selectRegionFromD3(d.properties.ru_name);});
 }
 
 function renderMapD3(){
-  console.log('renderMapD3 called, mode:',_mapD3Mode);
   const container=qs('#mapD3Container');
-  if(!container){console.warn('renderMapD3: container not found');return;}
+  if(!container){mapIssue('warning','renderMapD3: container not found');return;}
   if(!window.d3||!window.topojson){
-    console.error('renderMapD3: Missing D3 or TopoJSON library');
+    mapIssue('error','renderMapD3: Missing D3 or TopoJSON library');
     container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)"><div style="text-align:center"><p>Ошибка: библиотеки не загружены</p></div></div>';
     return;
   }
   if(!window.RUSSIA_TOPO){
-    console.warn('renderMapD3: RUSSIA_TOPO not loaded yet');
     container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)"><div style="text-align:center"><p>Загрузка карты...</p></div></div>';
-    setTimeout(renderMapD3,1000);
     return;
   }
   try{
-    container.innerHTML='<div style="display:flex;flex-direction:column;height:100%;padding:0"><div style="flex:1;position:relative;overflow:hidden;border-radius:8px;background:var(--surface);min-height:0"><svg id="d3Map" style="width:100%;height:100%"></svg></div></div>';
+    container.innerHTML='<div style="display:flex;flex-direction:column;height:100%;padding:0"><div style="flex:1;position:relative;overflow:hidden;border-radius:8px;background:var(--bg);min-height:0"><svg id="d3Map" style="width:100%;height:100%"></svg></div></div>';
     const svg=qs('#d3Map');const parentContainer=svg.parentElement.parentElement;const W=Math.max(parentContainer.clientWidth-20,600);const H=Math.max(parentContainer.clientHeight-20||500,450);
-    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const g=d3.select('#d3Map').append('g');const geojson=topojson.feature(window.RUSSIA_TOPO,window.RUSSIA_TOPO.objects.default);console.log('GeoJSON features:',geojson.features.length);const projection=d3.geoConicEqualArea().rotate([-105,0]).center([0,65]).parallels([50,75]).fitSize([W,H],geojson);const path=d3.geoPath().projection(projection);
-    g.selectAll('path').data(geojson.features).enter().append('path').attr('d',path).attr('fill',d=>_getD3Color(d)).attr('stroke','rgba(255,255,255,.35)').attr('stroke-width',1).style('cursor','pointer').style('transition','all 0.2s ease').on('mouseover',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.8)').attr('stroke-width',2).style('filter','brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,.3))');}).on('mousemove',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e);}).on('mouseout',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.5).style('filter','none');}).on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');}).on('click',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';let details='<strong>'+name+'</strong><br>';details+='📊 Индекс риска: '+(p.score||'—')+'<br>';details+='🦽 Обеспечение ТСР: '+(p.tsr?p.tsr.toFixed(1):'—')+'%<br>';details+='💰 Освоение бюджета: '+(p.budget||'—')+'%<br>';details+='⏰ Просрочено: '+(p.overdue?p.overdue.toFixed(1):'—')+'%';showRegionPanel(name,details);});renderD3ExtraRegions(g,projection);console.log('✓ D3 map rendered');
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const g=d3.select('#d3Map').append('g');const geojson=topojson.feature(window.RUSSIA_TOPO,window.RUSSIA_TOPO.objects.default);const projection=d3.geoConicEqualArea().rotate([-105,0]).center([0,65]).parallels([50,75]).fitSize([W,H],geojson);const path=d3.geoPath().projection(projection);
+    g.selectAll('path').data(geojson.features).enter().append('path').attr('d',path).attr('fill',d=>_getD3Color(d)).attr('stroke','rgba(255,255,255,.35)').attr('stroke-width',1).style('cursor','pointer').style('transition','all 0.2s ease').on('mouseover',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.8)').attr('stroke-width',2).style('filter','brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,.3))');}).on('mousemove',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e);}).on('mouseout',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.5).style('filter','none');}).on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');}).on('click',(e,d)=>{selectRegionFromD3(d.properties.ru_name||d.properties.name||'—');});renderD3ExtraRegions(g,projection);syncD3Selection();
   }catch(err){
-    console.error('Error rendering D3 map:',err);
+    mapIssue('error','Error rendering D3 map',err.message);
     container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)"><div style="text-align:center"><p>Ошибка при загрузке карты</p><p style="font-size:12px">'+err.message+'</p></div></div>';
   }
-}
-
-function showRegionPanel(name,details){
-  const existing=qs('#regionPanel');
-  if(existing)existing.remove();
-  const panel=document.createElement('div');
-  panel.id='regionPanel';
-  panel.style.cssText='position:fixed;top:80px;right:20px;background:var(--surface);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:20px;min-width:320px;z-index:1000;font-family:Arial,sans-serif;color:var(--text);max-height:70vh;overflow-y:auto;border:1px solid var(--border);';
-
-  const header=document.createElement('div');
-  header.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;';
-  const title=document.createElement('h3');
-  title.style.cssText='margin:0;font-size:18px;';
-  title.textContent=name;
-  const closeBtn=document.createElement('button');
-  closeBtn.textContent='×';
-  closeBtn.style.cssText='background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-3);padding:0;';
-  closeBtn.addEventListener('click',function(){panel.remove();});
-  header.appendChild(title);
-  header.appendChild(closeBtn);
-
-  const content=document.createElement('div');
-  content.style.cssText='font-size:13px;color:var(--text-2);line-height:1.6;';
-  content.innerHTML=details;
-
-  panel.appendChild(header);
-  panel.appendChild(content);
-  document.body.appendChild(panel);
 }
 
 async function loadRussiaTopo(){
   try{
     const controller=new AbortController();
     const timeoutId=setTimeout(()=>controller.abort(),8000);
-    const response=await fetch('../assets/js/data.js',{signal:controller.signal});
+    const response=await fetch('/assets/js/data.js',{signal:controller.signal});
     clearTimeout(timeoutId);
-    if(!response.ok){console.error('Failed to fetch data.js:',response.status);return false;}
+    if(!response.ok){mapIssue('error','Failed to fetch data.js',response.status);return false;}
     const txt=await response.text();
     const startIdx=txt.indexOf('const RUSSIA_TOPO = {');
-    if(startIdx===-1){console.error('RUSSIA_TOPO not found in data.js');return false;}
+    if(startIdx===-1){mapIssue('error','RUSSIA_TOPO not found in data.js');return false;}
     let braceCount=0,endIdx=-1;let inStr=false,escapeNext=false;
     for(let i=startIdx+20;i<txt.length;i++){
       const ch=txt[i];
@@ -612,32 +816,56 @@ async function loadRussiaTopo(){
       if(ch==='"'&&(i===0||txt[i-1]!=='\\')){inStr=!inStr;continue;}
       if(!inStr){if(ch==='{')braceCount++;if(ch==='}'){braceCount--;if(braceCount===0){endIdx=i;break;}}}
     }
-    if(endIdx===-1){console.error('Could not find RUSSIA_TOPO end');return false;}
+    if(endIdx===-1){mapIssue('error','Could not find RUSSIA_TOPO end');return false;}
     const json=txt.substring(startIdx+20,endIdx+1);
     window.RUSSIA_TOPO=JSON.parse(json);
     if(!window.RUSSIA_TOPO?.objects?.default?.geometries || !Array.isArray(window.RUSSIA_TOPO.objects.default.geometries)){
-      console.error('Invalid RUSSIA_TOPO structure');return false;
+      mapIssue('error','Invalid RUSSIA_TOPO structure');return false;
     }
     if(window.RUSSIA_TOPO.objects.default.geometries.length===0){
-      console.error('RUSSIA_TOPO has no geometries');return false;
+      mapIssue('error','RUSSIA_TOPO has no geometries');return false;
     }
-    console.log('✓ RUSSIA_TOPO loaded successfully');
     return true;
   }catch(e){
-    console.error('✗ Failed to load RUSSIA_TOPO:',e);
+    mapIssue('error','Failed to load RUSSIA_TOPO',e.message);
     return false;
   }
 }
 
+function ensureRussiaTopo(){
+  if(window.RUSSIA_TOPO)return Promise.resolve(true);
+  if(!_topoLoadPromise)_topoLoadPromise=loadRussiaTopo();
+  return _topoLoadPromise;
+}
+
+function renderRankPanel(){
+  const panel=qs('#rankPanel');if(!panel)return;
+  const entries=Object.entries(_mapRegionVals).filter(([n])=>REGION_GRID[n]).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){panel.innerHTML='';return;}
+  const top5=entries.slice(0,5);const bot5=entries.slice(-5);
+  const mkRow=([n,v],i,isTop)=>'<div class="rank-item" data-name="'+n+'"><span class="rank-num">'+(isTop?i+1:'↓')+'</span><span class="rank-dot" style="background:'+_mapTileBg(n).bg+'"></span><span class="rank-lbl">'+regShort(n)+'</span><span class="rank-val">'+metricDisplay(v)+'</span></div>';
+  let html='<div class="rank-title">Топ 5 ↑</div>';
+  top5.forEach((e,i)=>html+=mkRow(e,i,true));
+  html+='<div class="rank-sep"></div><div class="rank-title">Аутсайдеры ↓</div>';
+  bot5.forEach((e,i)=>html+=mkRow(e,i,false));
+  panel.innerHTML=html;
+  panel.querySelectorAll('.rank-item').forEach(el=>el.addEventListener('click',function(){const name=this.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;const g=REGIONS.find(gr=>gr.list.includes(name));_mbarActiveFo=g?g.fo:null;}buildMapTree('');_refreshMapTiles();_syncToStore();_updateMbarStat();const tile=qs('.reg-tile[data-name="'+name+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});}));
+}
+
+function updateLegendVals(){
+  const mn=qs('#mlegMin'),mx=qs('#mlegMax');
+  if(mn)mn.textContent=metricDisplay(_mapValMin);
+  if(mx)mx.textContent=metricDisplay(_mapValMax);
+}
+
+
 function init(){
   document.querySelectorAll('.map-switcher-btn[data-map]').forEach(btn=>btn.addEventListener('click',function(){switchMap(this.dataset.map);}));
   document.querySelectorAll('[data-panel]').forEach(btn=>btn.addEventListener('click',function(){switchPanelMode(this.dataset.panel);}));
-  document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',function(){switchD3Mode(this.dataset.mode);}));
-  qs('#mbarReset').addEventListener('click',function(){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_updateMbarStat();});
+  qs('#mbarReset').addEventListener('click',function(){_mbarActiveRegion=null;_mbarActiveFo=null;buildMapTree('');_refreshMapTiles();_syncToStore();_updateMbarStat();});
   const themeSw=document.querySelector('.theme-sw');
   if(themeSw){themeSw.addEventListener('click',function(){const t=document.documentElement.dataset.theme==='dark'?'light':'dark';applyTheme(t);});}
   _mapD3Mode='score';
-  console.log('init() complete, D3 mode set to',_mapD3Mode);
   renderMetricTree();
   switchPanelMode('region');
   renderMapGrid();
@@ -648,11 +876,33 @@ const _savedTheme=localStorage.getItem('mintrud-theme');
 if(_savedTheme&&_savedTheme!==document.documentElement.dataset.theme){
   applyTheme(_savedTheme);
 }
+const _focusRegionFromQuery=new URLSearchParams(window.location.search).get('region');
+
+function focusRegionFromQuery(){
+  if(!_focusRegionFromQuery)return;
+  const name=_focusRegionFromQuery;
+  const group=REGIONS.find(g=>g.list.includes(name));
+  if(!group)return;
+  _mbarActiveRegion=name;
+  _mbarActiveFo=group.fo;
+  buildMapTree('');
+  _refreshMapTiles();
+  _updateMbarStat();
+  const tile=qs('.reg-tile[data-name="'+name+'"]');
+  if(tile){
+    tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});
+    tile.classList.add('reg-focus-pulse');
+  }
+}
 
 document.addEventListener('DOMContentLoaded',async()=>{
-  const topoLoaded=await loadRussiaTopo();
-  if(!topoLoaded){console.warn('Warning: RUSSIA_TOPO failed to load, D3 map may not work');}
   init();
+  ensureRussiaTopo().then((topoLoaded)=>{
+    if(!topoLoaded){mapIssue('warning','RUSSIA_TOPO failed to load, D3 map may not work');return;}
+    if(qs('.map-view[data-map="d3"]').classList.contains('active'))renderMapD3();
+  });
+  if(_focusRegionFromQuery){setTimeout(focusRegionFromQuery,250);}
+  else{setTimeout(_restoreRegionFromStore,250);}
 });
 </script>
 </body>

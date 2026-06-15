@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../hooks/useStore';
 import { useSF } from '../hooks/useSF';
 import KpiCard from '../components/KpiCard';
+import MinisterSummary from '../components/MinisterSummary';
 import Card from '../components/Card';
 import CausesChart from '../components/CausesChart';
 import AgeChart from '../components/AgeChart';
@@ -24,19 +25,34 @@ import { BASE, PREV_POP, PREV_EXAM, PREV_TSR } from '../lib/constants';
 function makeTrend(curr, prev, higherIsBetter = true) {
   if (prev === undefined || prev === null || prev === 0 || curr === undefined || curr === null) return null;
   const delta = (curr - prev) / Math.abs(prev) * 100;
-  if (!isFinite(delta) || Math.abs(delta) < 0.05) return { sign: '→', cls: 'trend-flat', delta: 0 };
+  if (!isFinite(delta)) return null;
+  if (Math.abs(delta) < 0.05) return { sign: '→', cls: 'trend-flat', delta: 0 };
   const up = delta > 0;
   const good = higherIsBetter ? up : !up;
-  return { sign: up ? '▲' : '▼', cls: good ? 'trend-up' : 'trend-down', delta };
+  const displayDelta = Math.max(Math.abs(delta), 0.1);
+  return { sign: up ? '▲' : '▼', cls: good ? 'trend-up' : 'trend-down', delta: displayDelta };
+}
+
+function trendPeriodLabel(activeTab, period) {
+  if (activeTab === 'exam') return period === 'today' ? 'к вчера' : 'к началу года';
+  if (activeTab === 'tsr') {
+    if (period === 'today') return 'к вчера';
+    if (period === 'month') return 'к пред. месяцу';
+    return 'к прошлому году';
+  }
+  return 'к пред. периоду';
 }
 
 // jitter() — ±1.4% random variation, applied fresh from base each tick (non-compounding)
 const jit = (v) => v * (1 + (Math.random() - 0.5) * 0.014);
 
 export default function Dashboard() {
-  const { activeTab, period } = useStore();
+  const { activeTab, period, syncFromStorage } = useStore();
   const sf = useSF();
   const [tick, setTick] = useState(0);
+
+  // Re-sync region selection from localStorage when returning from map
+  useEffect(() => { syncFromStorage(); }, []);
 
   // Live data refresh every 7 seconds (matches old setInterval(loadData,7000))
   useEffect(() => {
@@ -50,7 +66,19 @@ export default function Dashboard() {
     const f = sf;
     let data = [];
 
-    if (activeTab === 'population') {
+    if (activeTab === 'executive') {
+      const exam = BASE.exam.today;
+      const tsr = BASE.tsr.today;
+      const examined = (exam.primary + exam.reexam) * f;
+      const appealRate = ((exam.appealMain + exam.appealFed) / (exam.primary + exam.reexam)) * 100;
+      const budgetPct = (tsr.budgetUsed / tsr.budgetTotal) * 100;
+      data = [
+        { label: 'Общий статус', value: 82, decimals: 0, suffix: '%', note: 'система в норме', status: 'ok', trend: makeTrend(82, 80, true) },
+        { label: 'Освидетельствовано', value: examined, note: 'сегодня', status: 'ok', trend: makeTrend(examined, PREV_EXAM.today.tx * f, true) },
+        { label: 'Обжалования', value: appealRate, decimals: 1, suffix: '%', note: appealRate > 6 ? 'повышенный уровень' : 'норма', status: appealRate > 6 ? 'warn' : 'ok', trend: makeTrend(appealRate, PREV_EXAM.today.ar, false) },
+        { label: 'Финансирование ТСР', value: budgetPct, decimals: 1, suffix: '%', note: 'освоение бюджета', status: budgetPct < 50 ? 'warn' : 'ok', trend: makeTrend(budgetPct, PREV_TSR.today.up, true) },
+      ];
+    } else if (activeTab === 'population') {
       const total = jit(BASE.total) * f;
       const ad = BASE.age.adults.values.reduce((s, v) => s + v, 0) * f;
       const ch = BASE.age.children.values.reduce((s, v) => s + v, 0) * f;
@@ -67,10 +95,13 @@ export default function Dashboard() {
       const ar = ap / tx * 100;
       const inval = Math.round(tx * d.result[0] / 100);
       const pp = PREV_EXAM[period] || PREV_EXAM.today;
+      const prevTx = pp.tx * f;
+      const prevInval = Math.round(prevTx * (pp.res || d.result[0]) / 100);
+      const prevAppeal = prevTx * (pp.ar || ar) / 100;
       data = [
-        { label: 'Освидетельствовано', value: tx, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(tx, pp.tx * f, true) },
-        { label: 'Установлено', value: inval, note: 'инвалидность', status: 'ok', trend: makeTrend(inval, pp.inval, true) },
-        { label: 'Обжаловано', value: ap, note: ar > 6 ? 'повышенный уровень' : 'норма', status: ar > 6 ? 'warn' : 'ok', trend: makeTrend(ap, pp.ap * f, true) },
+        { label: 'Освидетельствовано', value: tx, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(tx, prevTx, true) },
+        { label: 'Установлено', value: inval, note: 'инвалидность', status: 'ok', trend: makeTrend(inval, prevInval, true) },
+        { label: 'Обжаловано', value: ap, note: ar > 6 ? 'повышенный уровень' : 'норма', status: ar > 6 ? 'warn' : 'ok', trend: makeTrend(ap, prevAppeal, true) },
       ];
     } else if (activeTab === 'tsr') {
       const d = BASE.tsr[period] || BASE.tsr.today;
@@ -87,7 +118,10 @@ export default function Dashboard() {
       ];
     }
 
-    return data;
+    const periodLabel = trendPeriodLabel(activeTab, period);
+    return data.map((item) => (
+      item.trend ? { ...item, trend: { ...item.trend, periodLabel } } : item
+    ));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, sf, period, tick]); // tick re-jitters values on each refresh interval
 
@@ -101,6 +135,12 @@ export default function Dashboard() {
       {(activeTab === 'exam' || activeTab === 'tsr') && (
         <div className="period-row" style={{ display: 'block' }}>
           <PeriodSelector />
+        </div>
+      )}
+
+      {activeTab === 'executive' && (
+        <div className="view active" id="view-executive">
+          <MinisterSummary />
         </div>
       )}
 
@@ -135,7 +175,8 @@ export default function Dashboard() {
           <Card id="card-appeal" label="Несогласие" title="Обжалования" detailsContent={<BlockDetail block="appeal" />}>
             <AppealFunnel />
           </Card>
-          <Card id="card-terms" label="Эффективность" title="Эффективность" detailsContent={<BlockDetail block="terms" />}>
+          <Card id="card-terms" label="Сроки МСЭ" title="Эффективность" detailsContent={<BlockDetail block="terms" />}
+            titleBadge={(() => { const v = (BASE.exam[period] || BASE.exam.today).terms; return <span className={`terms-badge ${v > 30 ? 'risk' : 'ok'}`}>{v > 30 ? 'Превышен норматив' : 'В норме'}</span>; })()}>
             <TermsStats />
           </Card>
         </div>
@@ -146,7 +187,7 @@ export default function Dashboard() {
           <Card id="card-issued" label="Выдача" title="Выдача ТСР" detailsContent={<BlockDetail block="issued" />}>
             <IssuedCharts />
           </Card>
-          <Card id="card-budget" label="Финансирование" title="Финансирование" detailsContent={<BlockDetail block="budget" />}>
+          <Card id="card-budget" label="Финансирование" title="Освоение бюджета" detailsContent={<BlockDetail block="budget" />}>
             <BudgetGauge />
           </Card>
           <Card id="card-groups" label="Группы ТСР" title="Распределение по типам" detailsContent={<BlockDetail block="groups" />}>

@@ -3,10 +3,6 @@ import { useSF } from '../hooks/useSF';
 import { BASE } from '../lib/constants';
 
 const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
-const barWidth = (pct) => {
-  if (pct <= 0) return '0%';
-  return `max(8px, ${Math.min(pct, 100)}%)`;
-};
 
 export default function AppealFunnel() {
   const { period } = useStore();
@@ -15,31 +11,51 @@ export default function AppealFunnel() {
   const total = (d.primary + d.reexam) * f;
   const main = d.appealMain * f;
   const fed = d.appealFed * f;
-  const mainPct = total > 0 ? (main / total) * 100 : 0;
-  const fedPct = total > 0 ? (fed / total) * 100 : 0;
+  const appealTotal = main + fed;
+  const appealPct = total > 0 ? (appealTotal / total) * 100 : 0;
+  const mainShare = appealTotal > 0 ? (main / appealTotal) * 100 : 0;
+  const fedShare  = appealTotal > 0 ? (fed  / appealTotal) * 100 : 0;
+  const isWarn = appealPct > 6;
 
   return (
-    <div className="appeal-funnel">
-      <div className="appeal-row">
-        <div className="appeal-row-top">
-          <span className="appeal-row-label">Главное бюро МСЭ</span>
-          <span className="appeal-row-pct">{mainPct.toFixed(1)}%</span>
+    <div className="appeal-panel">
+      <div className={`appeal-center ${isWarn ? 'warn' : 'ok'}`}>
+        <div className={`appeal-pct ${isWarn ? 'warn' : 'ok'}`}>
+          {appealPct.toFixed(1)}%
         </div>
-        <div className="appeal-track">
-          <div className="appeal-fill" style={{ width: barWidth(mainPct), background: '#f59e0b' }}></div>
+        <div className="appeal-pct-label">от освидетельствованных</div>
+        <div className={`appeal-badge ${isWarn ? 'warn' : 'ok'}`}>
+          {isWarn ? '⚠ Превышен порог 6%' : '✓ В норме'}
         </div>
-        <div className="appeal-row-num">{fmt(main)} чел.</div>
       </div>
 
-      <div className="appeal-row">
-        <div className="appeal-row-top">
-          <span className="appeal-row-label">Федеральное бюро МСЭ</span>
-          <span className="appeal-row-pct">{fedPct.toFixed(1)}%</span>
+      <div className="appeal-sep" />
+
+      <div className="appeal-rows">
+        <div className="appeal-row appeal-row-main">
+          <div className="appeal-row-body">
+            <span>Главное бюро МСЭ</span>
+            <strong>{fmt(main)}</strong>
+          </div>
+          <div className="appeal-row-track">
+            <div className="appeal-row-fill appeal-row-fill-main" style={{ width: `${mainShare}%` }} />
+          </div>
         </div>
-        <div className="appeal-track">
-          <div className="appeal-fill" style={{ width: barWidth(fedPct), background: '#ef4444' }}></div>
+        <div className="appeal-row appeal-row-fed">
+          <div className="appeal-row-body">
+            <span>Федеральное бюро МСЭ</span>
+            <strong>{fmt(fed)}</strong>
+          </div>
+          <div className="appeal-row-track">
+            <div className="appeal-row-fill appeal-row-fill-fed" style={{ width: `${fedShare}%` }} />
+          </div>
         </div>
-        <div className="appeal-row-num">{fmt(fed)} чел.</div>
+        <div className="appeal-row appeal-row-total">
+          <div className="appeal-row-body">
+            <span>Всего обжалований</span>
+            <strong>{fmt(appealTotal)}</strong>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -24,6 +24,8 @@ const DEFAULT_CENTER_IMAGE_STYLE = {
   top: '57px',
 };
 
+const CENTER_ACCENTS = ['#3b82f6', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444'];
+
 function SunIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -192,10 +194,22 @@ export default function Home() {
     position: 'relative',
     isolation: 'isolate',
     background: dark
-      ? 'linear-gradient(152deg, #070b18 0%, #0d1430 48%, #071629 100%)'
-      : 'linear-gradient(150deg, #f8fbff 0%, #edf3fb 46%, #dde7f4 100%)',
+      ? `
+        radial-gradient(circle at 8% 10%, rgba(59, 130, 246, 0.24) 0, transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(14, 165, 233, 0.18) 0, transparent 30%),
+        radial-gradient(circle at 18% 88%, rgba(34, 197, 148, 0.13) 0, transparent 31%),
+        radial-gradient(circle at 92% 82%, rgba(248, 170, 34, 0.1) 0, transparent 27%),
+        linear-gradient(145deg, #071021 0%, #0b1430 46%, #081a2b 100%)
+      `
+      : `
+        radial-gradient(circle at 8% 10%, rgba(47, 115, 255, 0.18) 0, transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(14, 165, 233, 0.16) 0, transparent 30%),
+        radial-gradient(circle at 18% 88%, rgba(16, 185, 129, 0.13) 0, transparent 30%),
+        radial-gradient(circle at 92% 82%, rgba(245, 158, 11, 0.11) 0, transparent 26%),
+        linear-gradient(145deg, #f7fbff 0%, #eaf3ff 42%, #edfdf8 100%)
+      `,
     fontFamily: 'Manrope, Inter, system-ui, sans-serif',
-    color: dark ? '#f2f2f7' : '#172033',
+    color: dark ? '#f7fbff' : '#102033',
   };
 
   const shell = {
@@ -207,16 +221,18 @@ export default function Home() {
     zIndex: 1,
   };
 
+  const cardBorderColor = dark ? 'rgba(128, 163, 204, 0.28)' : 'rgba(126, 156, 190, 0.32)';
+
   const card = {
     height: '145px',
     borderRadius: '16px',
-    border: dark ? '1px solid rgba(255, 255, 255, 0.14)' : '1px solid #dce3ee',
+    border: `1px solid ${cardBorderColor}`,
     background: dark
-      ? '#26385B'
-      : 'rgba(255, 255, 255, 0.82)',
+      ? 'linear-gradient(155deg, rgba(17, 29, 54, 0.96), rgba(10, 22, 42, 0.94))'
+      : 'linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.94))',
     boxShadow: dark
-      ? '0 18px 46px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-      : '0 18px 42px rgba(44, 76, 120, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+      ? '0 18px 44px rgba(2, 8, 23, 0.32), 0 2px 10px rgba(2, 8, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+      : '0 16px 38px rgba(31, 76, 129, 0.1), 0 2px 8px rgba(31, 76, 129, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(14px)',
   };
 
@@ -224,10 +240,12 @@ export default function Home() {
     width: '43px',
     height: '43px',
     borderRadius: '12px',
-    border: dark ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(220, 227, 238, 0.72)',
-    background: dark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.78)',
-    color: dark ? '#fff' : '#172033',
-    boxShadow: dark ? '0 12px 28px rgba(0, 0, 0, 0.18)' : '0 12px 28px rgba(44, 76, 120, 0.08)',
+    border: dark ? '1px solid rgba(96, 165, 250, 0.28)' : '1px solid rgba(96, 165, 250, 0.32)',
+    background: dark ? 'rgba(15, 30, 58, 0.72)' : 'rgba(255, 255, 255, 0.78)',
+    color: dark ? '#bfdbfe' : '#2563eb',
+    boxShadow: dark
+      ? '0 8px 20px rgba(2, 8, 23, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+      : '0 8px 20px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.92)',
     backdropFilter: 'blur(14px)',
     display: 'flex',
     alignItems: 'center',
@@ -274,7 +292,7 @@ export default function Home() {
                 fontSize: '16px',
                 fontWeight: 800,
                 lineHeight: 1.05,
-                color: dark ? '#f2f2f7' : '#1f2937',
+                color: dark ? '#f7fbff' : '#102033',
                 textAlign: 'left',
                 whiteSpace: 'nowrap',
               }}>
@@ -311,11 +329,13 @@ export default function Home() {
             width: '100%',
             minHeight: '190px',
             borderRadius: '16px',
-            border: dark ? '1px solid transparent' : '1px solid #3f7bff',
+            border: dark ? '1px solid rgba(191, 219, 254, 0.18)' : '1px solid rgba(255, 255, 255, 0.28)',
             background: dark
-              ? '#26385B'
-              : 'linear-gradient(135deg, #3f7bff 0%, #3572f2 48%, #5aa2ff 100%)',
-            boxShadow: dark ? '0 22px 60px rgba(0, 0, 0, 0.24)' : '0 24px 58px rgba(63, 123, 255, 0.22)',
+              ? 'linear-gradient(120deg, rgba(34, 197, 148, 0.12) 0%, transparent 32%), linear-gradient(135deg, #0b275e 0%, #1e3a8a 48%, #075985 100%)'
+              : 'linear-gradient(120deg, rgba(16, 185, 129, 0.18) 0%, transparent 32%), linear-gradient(135deg, #174ea6 0%, #2563eb 48%, #0ea5e9 100%)',
+            boxShadow: dark
+              ? '0 24px 64px rgba(2, 8, 23, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
+              : '0 24px 58px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22)',
             overflow: 'hidden',
             position: 'relative',
             padding: 'clamp(22px, 2.4vw, 28px) clamp(20px, 2.8vw, 36px)',
@@ -367,7 +387,12 @@ export default function Home() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
           gap: '16px',
         }}>
-          {CENTERS.map((center) => (
+          {CENTERS.map((center, index) => {
+            const accent = CENTER_ACCENTS[index % CENTER_ACCENTS.length];
+            const accentSoft = dark ? `${accent}2e` : `${accent}26`;
+            const accentSofter = dark ? `${accent}16` : `${accent}12`;
+
+            return (
             <button
               key={center.id}
               className="home-center-card"
@@ -379,6 +404,14 @@ export default function Home() {
                 padding: '20px min(120px, 28%) 22px 20px',
                 textAlign: 'left',
                 cursor: center.href ? 'pointer' : 'default',
+                borderColor: center.active
+                  ? (dark ? 'rgba(34, 197, 148, 0.46)' : 'rgba(16, 185, 129, 0.46)')
+                  : cardBorderColor,
+                background: `
+                  radial-gradient(circle at 92% 16%, ${accentSoft}, transparent 38%),
+                  radial-gradient(circle at 0% 100%, ${accentSofter}, transparent 30%),
+                  ${card.background}
+                `,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -388,11 +421,11 @@ export default function Home() {
             >
               <span style={{
                 maxWidth: '335px',
-                color: dark ? '#f2f2f7' : '#172033',
+                color: dark ? '#f7fbff' : '#102033',
                 fontFamily: 'Manrope, Inter, system-ui, sans-serif',
                 fontSize: '20px',
                 lineHeight: '1.25',
-                fontWeight: 500,
+                fontWeight: center.active ? 700 : 600,
                 letterSpacing: '-0.35px',
               }}>
                 {center.title}
@@ -401,9 +434,9 @@ export default function Home() {
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
-                border: dark ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid #dfe7f2',
-                background: dark ? 'rgba(255, 255, 255, 0.1)' : '#fff',
-                color: '#3f7bff',
+                border: dark ? '1px solid rgba(96, 165, 250, 0.28)' : '1px solid rgba(96, 165, 250, 0.32)',
+                background: dark ? 'rgba(15, 30, 58, 0.72)' : 'rgba(255, 255, 255, 0.78)',
+                color: accent,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -420,6 +453,9 @@ export default function Home() {
                 left: center.imageStyle?.left,
                 top: center.imageStyle?.top,
                 opacity: 1,
+                filter: dark
+                  ? 'drop-shadow(0 12px 18px rgba(2, 8, 23, 0.28))'
+                  : 'drop-shadow(0 12px 18px rgba(37, 99, 235, 0.12))',
               }}>
                 {center.image ? (
                   <img
@@ -437,7 +473,8 @@ export default function Home() {
                 )}
               </span>
             </button>
-          ))}
+            );
+          })}
         </section>
       </div>
     </div>

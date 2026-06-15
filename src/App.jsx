@@ -3,12 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useStore } from './hooks/useStore';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import MapPage from './pages/MapPage';
 import Topbar from './components/Topbar';
 import Navbar from './components/Navbar';
 import './App.css';
 
 function DashboardLayout() {
-  console.log('✅ DashboardLayout mounted - navigated to /dashboard successfully');
   return (
     <div className="app">
       <Topbar />
@@ -16,13 +16,6 @@ function DashboardLayout() {
       <Dashboard />
     </div>
   );
-}
-
-function MapRedirect() {
-  useEffect(() => {
-    window.location.replace('/map.html');
-  }, []);
-  return null;
 }
 
 function App() {
@@ -37,7 +30,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<DashboardLayout />} />
-        <Route path="/map" element={<MapRedirect />} />
+        <Route path="/map" element={<MapPage />} />
       </Routes>
     </Router>
   );

@@ -7,6 +7,8 @@ import { BASE } from '../lib/constants';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
+const formatAgeTick = (label) => label;
+
 export default function AgeChart() {
   const [ageMode, setAgeMode] = useState(localStorage.getItem('age-mode') || 'children');
   const { theme } = useStore();
@@ -64,7 +66,17 @@ export default function AgeChart() {
         stacked: true,
         grid: { display: false, drawTicks: true, tickLength: 4, tickColor: dark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(15, 23, 42, 0.22)' },
         border: { display: true, color: dark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(15, 23, 42, 0.18)' },
-        ticks: { color: dark ? '#ffffff' : '#172033', font: { size: 16, weight: '800' }, maxRotation: 0, minRotation: 0, autoSkip: false, padding: 10 },
+        ticks: {
+          color: dark ? '#ffffff' : '#000000',
+          font: { size: 11, weight: '700', lineHeight: 1.35 },
+          maxRotation: 0,
+          minRotation: 0,
+          autoSkip: false,
+          padding: 10,
+          callback(value) {
+            return formatAgeTick(this.getLabelForValue(value));
+          },
+        },
       },
       y: {
         stacked: true,
@@ -73,7 +85,7 @@ export default function AgeChart() {
         ticks: { display: false },
       },
     },
-    layout: { padding: { bottom: 18, left: 4, right: 4 } },
+    layout: { padding: { bottom: 14, left: 4, right: 4 } },
   };
 
   return (

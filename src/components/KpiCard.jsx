@@ -27,7 +27,7 @@ export default function KpiCard({ label, value, note, status = 'ok', decimals = 
         <div style={{ height: '16px' }}>
           {trend && (
             <span className={`kpi-trend ${trend.cls}`}>
-              {trend.sign} {Math.abs(trend.delta).toFixed(1)}% к пред. периоду
+              {trend.sign} {Math.abs(trend.delta).toFixed(1)}% {trend.periodLabel || 'к пред. периоду'}
             </span>
           )}
         </div>

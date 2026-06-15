@@ -14,6 +14,13 @@ export const BASE = {
     labels: ['I группа', 'II группа', 'III группа'],
     working: [120, 260, 470],
     notWorking: [180, 240, 220],
+    okved: [
+      { name: 'Обрабатывающие производства', value: 182, share: 21.4 },
+      { name: 'Торговля и ремонт', value: 164, share: 19.3 },
+      { name: 'Образование', value: 118, share: 13.9 },
+      { name: 'Здравоохранение и соцуслуги', value: 106, share: 12.5 },
+      { name: 'Транспорт и хранение', value: 82, share: 9.6 },
+    ],
   },
   age: {
     children: {
@@ -116,7 +123,7 @@ export const BASE = {
   },
 };
 
-export const PREV_POP = { total: 2145000, er: 32.1, ch: 665000 };
+export const PREV_POP = { total: 2145000, ad: 2140000, ch: 665000 };
 
 export const PREV_EXAM = {
   today: { tx: 1450, terms: 19.2, ar: 5.9, res: 72 },

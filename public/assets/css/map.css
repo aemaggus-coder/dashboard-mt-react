@@ -153,7 +153,7 @@ svg path:hover {
 .tooltip-title {
   font-size: 13px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--blue-l);
   margin-bottom: 8px;
 }
 
@@ -210,4 +210,43 @@ html[data-theme="light"] svg path {
 
 html[data-theme="light"] .legend-dot {
   border-color: var(--border);
+}
+
+html[data-theme="dark"] .tooltip {
+  border-color: rgba(147, 197, 253, 0.7);
+}
+
+html[data-theme="dark"] .tooltip-title {
+  color: #dbeafe;
+}
+
+.region-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  padding: 20px;
+  min-width: 320px;
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  color: var(--text);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.region-panel-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-3);
+  padding: 0;
+}
+
+.region-panel-content {
+  color: var(--text-2);
+  line-height: 1.6;
 }

@@ -173,35 +173,14 @@ class RussiaMap {
     // Создаем новую panel
     const panel = document.createElement('div');
     panel.id = 'regionPanel';
-    panel.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      padding: 20px;
-      min-width: 320px;
-      z-index: 1000;
-      font-family: Arial, sans-serif;
-      color: #333;
-      max-height: 80vh;
-      overflow-y: auto;
-    `;
+    panel.className = 'region-panel';
 
     panel.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; font-size: 18px;">${name}</h3>
-        <button onclick="this.parentElement.parentElement.remove()" style="
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: #999;
-          padding: 0;
-        ">×</button>
+        <button class="region-panel-close" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
-      <div>${details}</div>
+      <div class="region-panel-content">${details}</div>
     `;
 
     document.body.appendChild(panel);
