@@ -8,7 +8,8 @@
       "Bash(git commit -m 'Fix navigation from home page to dashboard *)",
       "Bash(grep -c '\\\\.__TRACKED_VAR__' src/App.css)",
       "Bash(grep -v \"Details.jsx$\")",
-      "Bash(grep -v \"RegionSelector.jsx$\")"
+      "Bash(grep -v \"RegionSelector.jsx$\")",
+      "Bash(npm run *)"
     ]
   }
 }
