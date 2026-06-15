@@ -1,8 +1,7 @@
 import { useStore } from '../hooks/useStore';
 import { useSF } from '../hooks/useSF';
 import { BASE } from '../lib/constants';
-
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+import { fmt } from '../lib/formatters';
 
 export default function AppealFunnel() {
   const { period } = useStore();

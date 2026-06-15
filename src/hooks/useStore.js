@@ -48,8 +48,8 @@ export const useStore = create((set) => ({
     set({ period });
   },
 
-  // Режим выдачи ТСР (натуральные / сертификат)
-  issueMode: localStorage.getItem('tsr-issue-mode') || 'nat',
+  // Режим выдачи ТСР (всего / натуральные / сертификат)
+  issueMode: localStorage.getItem('tsr-issue-mode') || 'all',
   setIssueMode: (mode) => {
     localStorage.setItem('tsr-issue-mode', mode);
     set({ issueMode: mode });
@@ -63,12 +63,16 @@ export const useStore = create((set) => ({
   },
 }));
 
-// Слушаем изменения localStorage из iframe карты (storage event приходит в родительское окно)
-window.addEventListener('storage', (e) => {
-  if (e.key === 'mintrud-regions') {
-    try { useStore.setState({ selectedRegions: JSON.parse(e.newValue || '[]') }); } catch {}
-  }
-  if (e.key === 'mintrud-scope') {
-    useStore.setState({ scope: e.newValue || 'rf' });
-  }
-});
+// Слушаем изменения localStorage из iframe карты (storage event приходит в родительское окно).
+// Флаг предотвращает дублирование слушателя при HMR в dev-режиме.
+if (!window.__mintrudStorageListener) {
+  window.__mintrudStorageListener = true;
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'mintrud-regions') {
+      try { useStore.setState({ selectedRegions: JSON.parse(e.newValue || '[]') }); } catch { /* ignore malformed JSON */ }
+    }
+    if (e.key === 'mintrud-scope') {
+      useStore.setState({ scope: e.newValue || 'rf' });
+    }
+  });
+}

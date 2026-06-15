@@ -52,7 +52,7 @@ export default function Dashboard() {
   const [tick, setTick] = useState(0);
 
   // Re-sync region selection from localStorage when returning from map
-  useEffect(() => { syncFromStorage(); }, []);
+  useEffect(() => { syncFromStorage(); }, [syncFromStorage]);
 
   // Live data refresh every 7 seconds (matches old setInterval(loadData,7000))
   useEffect(() => {
@@ -108,13 +108,13 @@ export default function Dashboard() {
       const issNat = jit(d.issuedNat), issCert = jit(d.issuedCert);
       const iss = (issNat + issCert) * f;
       const people = d.groups.reduce((sum, group) => sum + group.people, 0) * f;
-      const cp = issCert / (issNat + issCert) * 100;
       const pp = PREV_TSR[period] || PREV_TSR.today;
+      const prevCert = pp.iss * pp.cp / 100 * f;
       data = [
         { label: 'Обеспечено инвалидов', value: people, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(people, pp.iss * 0.28 * f, true) },
         { label: 'Выдано всего ТСР', value: iss, note: period === 'today' ? 'сегодня' : 'за период', status: 'ok', trend: makeTrend(iss, pp.iss * f, true) },
         { label: 'Выдано натур', value: issNat * f, note: 'натуральная выдача', status: 'ok', trend: makeTrend(issNat * f, pp.iss * 0.54 * f, true) },
-        { label: 'Эл. сертификаты', value: cp, decimals: 1, suffix: '%', note: 'цифровизация', status: 'ok', trend: makeTrend(cp, pp.cp, true) },
+        { label: 'Эл. сертификаты', value: issCert * f, note: 'электронная выдача', status: 'ok', trend: makeTrend(issCert * f, prevCert, true) },
       ];
     }
 

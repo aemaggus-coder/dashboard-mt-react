@@ -160,7 +160,7 @@ function CenterIcon({ id }) {
 }
 
 export default function Home() {
-  const { theme, setTheme } = useStore();
+  const { theme, setTheme, setActiveTab } = useStore();
   const navigate = useNavigate();
   const dark = theme === 'dark';
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -396,7 +396,7 @@ export default function Home() {
             <button
               key={center.id}
               className="home-center-card"
-              onClick={() => center.href && navigate(center.href)}
+              onClick={() => { if (center.href) { setActiveTab('executive'); navigate(center.href); } }}
               disabled={!center.href}
               style={{
                 ...card,

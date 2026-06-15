@@ -7,6 +7,8 @@ function prefetchMapAssets() {
   if (typeof document === 'undefined') return;
   [
     { href: '/map.html?embedded=1', as: 'document' },
+    { href: '/assets/vendor/d3.v7.min.js', as: 'script' },
+    { href: '/assets/vendor/topojson.v3.min.js', as: 'script' },
     { href: '/assets/js/data.js', as: 'script' },
   ].forEach(({ href, as }) => {
     if (document.querySelector(`link[data-map-prefetch="${href}"]`)) return;

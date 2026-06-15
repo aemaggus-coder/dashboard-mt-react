@@ -1,9 +1,9 @@
 import { useStore } from '../hooks/useStore';
 import { useAnimatedDecimal } from '../hooks/useAnimatedNumber';
 import { BASE } from '../lib/constants';
+import { fmt1 } from '../lib/formatters';
 
 const TMAX = 40;
-const fmt1 = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const tColor = (v) => (v < 25 ? '#10b981' : v < 30 ? '#f59e0b' : '#ef4444');
 
 const PERIOD_BARS = [
@@ -17,7 +17,6 @@ export default function TermsStats() {
   const d = BASE.exam[period] || BASE.exam.today;
   const terms = d.terms;
   const animTerms = useAnimatedDecimal(terms, 1100);
-  const overNorm = terms > 30;
   const termsStatus = terms < 25 ? 'ok' : terms < 30 ? 'warn' : 'risk';
 
   return (

@@ -15,7 +15,7 @@ export default function IssuedCharts() {
 
   const nat = d.issuedNat;
   const cert = d.issuedCert;
-  const tot = nat + cert || 1;
+  const tot = (nat + cert) || 1;
   const natPct = Math.round((nat / tot) * 100);
   const certPct = 100 - natPct;
 

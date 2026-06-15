@@ -69,6 +69,17 @@ textarea {
   font: inherit;
 }
 
+/* Cross-platform button normalize: removes native OS border/bg/shadow
+   and fixes line-height that differs between macOS CoreText,
+   Windows DirectWrite and Linux Freetype. */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color: inherit;
+  line-height: 1;
+}
+
 body.home-page-body {
   min-width: 0;
 }
@@ -717,6 +728,14 @@ html:not([data-theme="light"]) .kpi.risk {
 .minister-panel-risks {
   grid-column: 2;
   grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.minister-panel-risks .minister-risk-list {
+  flex: 1;
+  gap: 6px;
+  justify-content: space-between;
 }
 
 .minister-panel-actions {
@@ -810,6 +829,25 @@ html:not([data-theme="light"]) .kpi.risk {
   border-color: rgba(96, 165, 250, 0.52);
   box-shadow: 0 14px 30px rgba(37, 99, 235, 0.14);
   outline: none;
+}
+
+/* Focus-visible for all interactive buttons — keyboard navigation */
+.nav-tab:focus-visible,
+.card-toggle-btn:focus-visible,
+.tsr-head-toggle-btn:focus-visible,
+.sc-btn:focus-visible,
+.period-btn:focus-visible,
+.modal-close:focus-visible,
+.map-btn:focus-visible,
+.map-switcher-btn:focus-visible {
+  outline: 2px solid var(--blue-l);
+  outline-offset: 2px;
+}
+
+.region-apply:not(:disabled):focus-visible,
+.region-reset:not(:disabled):focus-visible {
+  outline: 2px solid var(--blue-l);
+  outline-offset: 2px;
 }
 
 .minister-signal span {
@@ -959,8 +997,8 @@ html[data-theme="light"] .minister-action-row {
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: minmax(260px, 1fr) minmax(260px, 1fr);
   grid-template-areas:
-    'causes noso age'
-    'causes noso employ';
+    'causes age noso'
+    'causes employ noso';
 }
 
 #card-causes {
@@ -3300,13 +3338,33 @@ html[data-theme="light"] .budget-stat.b-rest {
 }
 
 .tsr-issued-cell {
-  min-width: 190px;
+  min-width: 260px;
+}
+
+.tsr-head-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  width: min(100%, 270px);
+  vertical-align: top;
+}
+
+.tsr-head-label {
+  display: block;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.45px;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .tsr-head-toggle {
   display: inline-flex;
-  width: min(100%, 210px);
-  min-width: 178px;
+  width: 100%;
+  min-width: 250px;
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--border);
@@ -3330,7 +3388,7 @@ html[data-theme="light"] .budget-stat.b-rest {
   color: var(--text-2);
   cursor: pointer;
   font: inherit;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
@@ -3397,6 +3455,12 @@ html[data-theme="light"] .budget-stat.b-rest {
   background: rgba(139, 92, 246, 0.07) !important;
 }
 
+.col-total {
+  color: var(--blue-l) !important;
+  font-family: var(--mono);
+  background: rgba(96, 165, 250, 0.07) !important;
+}
+
 .tsr-sq {
   display: inline-block;
   width: 11px;
@@ -3428,13 +3492,20 @@ html[data-theme="light"] .budget-stat.b-rest {
 
 thead .col-nat,
 thead .col-cert,
+thead .col-total,
 thead .col-sum {
   color: var(--text-3) !important;
   background: none !important;
 }
 
+thead .col-sum {
+  min-width: 112px;
+  white-space: nowrap;
+}
+
 thead .col-nat.tsr-issued-cell,
-thead .col-cert.tsr-issued-cell {
+thead .col-cert.tsr-issued-cell,
+thead .col-total.tsr-issued-cell {
   text-align: center;
 }
 
@@ -4160,6 +4231,7 @@ html[data-theme="light"] .period-btn.active {
 
   .tsr-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tsr-table {
@@ -4169,6 +4241,397 @@ html[data-theme="light"] .period-btn.active {
   .modal {
     padding: 22px;
   }
+}
+
+@media (max-width: 560px) {
+  body:not(.home-page-body) {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app,
+  .map-page-shell {
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  .topbar,
+  .map-page-topbar {
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .brand {
+    gap: 7px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 34px;
+  }
+
+  .brand-text,
+  .divider {
+    display: none;
+  }
+
+  .topbar-center {
+    padding: 0;
+    text-align: left;
+  }
+
+  .topbar-title,
+  .map-page-title {
+    font-size: 12px;
+    line-height: 1.25;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .navbar {
+    gap: 8px;
+    padding: 0 10px 10px;
+  }
+
+  .nav-tabs {
+    width: calc(100vw - 20px);
+    flex: 0 0 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-tab,
+  .nav-tabs:has(.nav-tab:nth-child(4)) .nav-tab {
+    flex: 0 0 auto;
+    min-width: max-content;
+    height: 44px;
+    padding-inline: 13px;
+    font-size: 11px;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  .map-btn {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .nav-scope {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .sc-btn {
+    width: 100%;
+    min-height: 36px;
+  }
+
+  .content {
+    gap: 10px;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+
+  .kpi-row {
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .kpi {
+    min-height: 86px;
+    padding: 10px 11px;
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .kpi-value {
+    font-size: clamp(22px, 9vw, 28px);
+    letter-spacing: -0.7px;
+  }
+
+  .kpi-note,
+  .kpi-trend {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .period-row {
+    margin: 0;
+  }
+
+  .view {
+    gap: 10px;
+  }
+
+  .card,
+  #card-causes,
+  #card-noso,
+  #card-groups {
+    min-height: 260px;
+    padding: 13px;
+  }
+
+  .card:hover,
+  .kpi:hover {
+    transform: none;
+  }
+
+  .card-title-row {
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .card-label {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .card-title,
+  #card-causes .card-title,
+  #card-age .card-title,
+  #card-noso .card-title,
+  #card-employ .card-title {
+    font-size: 15px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .card-badge {
+    display: none;
+  }
+
+  .minister-summary,
+  #view-executive.active {
+    gap: 10px;
+  }
+
+  .minister-panel {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .minister-panel-head {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .minister-panel h2 {
+    font-size: 21px;
+    line-height: 1.15;
+  }
+
+  .minister-signal-grid {
+    gap: 8px;
+  }
+
+  .minister-signal {
+    padding: 11px;
+  }
+
+  .minister-signal strong {
+    font-size: 24px;
+  }
+
+  .minister-risk-row {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+  }
+
+  .minister-risk-row em,
+  .minister-risk-row::after {
+    display: none;
+  }
+
+  .minister-action-row {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+  }
+
+  .causes-donut-wrap,
+  .mini-donut-wrap {
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .donut-box {
+    min-height: 170px;
+  }
+
+  .causes-legend,
+  .mini-donut-legend,
+  .result-mini-donut-legend {
+    width: 100%;
+    flex-basis: auto;
+    gap: 8px;
+  }
+
+  .causes-leg-name,
+  .mini-donut-leg-name,
+  .noso-name {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .causes-leg-num,
+  .noso-count {
+    font-size: 16px;
+  }
+
+  .noso-item {
+    padding: 7px 0;
+  }
+
+  .noso-head {
+    gap: 8px;
+  }
+
+  .noso-track {
+    height: 22px;
+  }
+
+  .age-header,
+  .employ-head,
+  .tsr-issued-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .age-toggle,
+  .employ-toggle,
+  .terms-toggle,
+  .tsr-issued-toggle {
+    width: 100%;
+    max-width: none;
+  }
+
+  .age-chart-panel {
+    padding-inline: 0;
+  }
+
+  .age-chart-wrap {
+    min-height: 180px;
+    max-height: none;
+    padding-inline: 0;
+  }
+
+  .appeal-panel {
+    gap: 10px;
+  }
+
+  .appeal-center {
+    padding: 10px 12px;
+  }
+
+  .appeal-pct {
+    font-size: 42px;
+  }
+
+  .appeal-row-body {
+    padding: 7px 8px;
+  }
+
+  .budget-stat-row,
+  .appeal-cards {
+    gap: 8px;
+  }
+
+  .tsr-table {
+    min-width: 560px;
+  }
+
+  .tsr-table thead th,
+  .tsr-table tbody td {
+    padding-inline: 7px;
+  }
+
+  .tsr-table tbody td {
+    font-size: 14px;
+  }
+
+  .tsr-table tbody td:first-child {
+    font-size: 12px;
+  }
+
+  .nav-scope > div,
+  .nav-scope > div > div {
+    position: static !important;
+  }
+
+  .region-pop {
+    position: absolute !important;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    bottom: auto;
+    width: min(370px, calc(100vw - 20px));
+    max-height: min(520px, calc(100dvh - 172px));
+    z-index: 320;
+  }
+
+  .region-list {
+    max-height: min(360px, calc(100dvh - 306px));
+  }
+
+  .modal-backdrop {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .modal {
+    width: 100%;
+    min-height: 0;
+    max-height: calc(100dvh - 20px);
+    border-radius: 14px;
+    padding: 18px 14px;
+  }
+
+  .modal-head {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
+  .modal-head h3 {
+    font-size: 22px;
+    line-height: 1.15;
+  }
+
+  .modal-content {
+    margin-top: 14px;
+    font-size: 15px;
+  }
+
+  .detail-table {
+    display: block;
+    overflow-x: auto;
+    margin-top: 14px;
+    font-size: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .detail-table th,
+  .detail-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .detail-tsr-table {
+    min-width: 560px;
+  }
+
 }
 
 /* NAV SCOPE */
@@ -4280,7 +4743,7 @@ html[data-theme="light"] .period-btn.active {
 }
 
 .detail-tsr-table thead th {
-  height: 56px;
+  height: 68px;
   font-size: 13px;
 }
 
@@ -4294,14 +4757,19 @@ html[data-theme="light"] .period-btn.active {
   font-size: 17px;
 }
 
+.detail-tsr-table .tsr-head-stack {
+  width: 320px;
+  max-width: 100%;
+}
+
 .detail-tsr-table .tsr-head-toggle {
-  width: 260px;
+  width: 100%;
   max-width: 100%;
 }
 
 .detail-tsr-table .tsr-head-toggle-btn {
   height: 28px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .detail-table thead tr {
@@ -4497,8 +4965,9 @@ html[data-theme="light"] .kpi-region-row {
   font-size: 16px;
   cursor: pointer;
   transition: 0.15s;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-close:hover {
@@ -5272,12 +5741,26 @@ html:not([data-theme="light"]) .appeal-card {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-html:not([data-theme="light"]) .budget-stat,
 html:not([data-theme="light"]) .kpi-region-row,
 html:not([data-theme="light"]) .detail-table tbody tr,
 html:not([data-theme="light"]) .tsr-row {
   background: rgba(11, 22, 42, 0.58);
   border-color: rgba(128, 163, 204, 0.2);
+}
+
+html:not([data-theme="light"]) .budget-stat.b-alloc {
+  background: rgba(96, 165, 250, 0.13);
+  border-color: rgba(96, 165, 250, 0.32);
+}
+
+html:not([data-theme="light"]) .budget-stat.b-used {
+  background: rgba(16, 185, 129, 0.13);
+  border-color: rgba(16, 185, 129, 0.32);
+}
+
+html:not([data-theme="light"]) .budget-stat.b-rest {
+  background: rgba(245, 158, 11, 0.13);
+  border-color: rgba(245, 158, 11, 0.32);
 }
 
 html:not([data-theme="light"]) .modal {

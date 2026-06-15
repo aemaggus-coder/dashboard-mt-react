@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useStore } from '../hooks/useStore';
 import { ALL_REGIONS } from '../lib/constants';
 
@@ -9,7 +9,10 @@ export default function RegionFilter() {
   const dropdownRef = useRef(null);
 
   const regions = ALL_REGIONS;
-  const filtered = regions.filter(r => r.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(
+    () => regions.filter(r => r.toLowerCase().includes(search.toLowerCase())),
+    [search, regions]
+  );
 
   const handleSelect = (region) => {
     setSelectedRegions(
@@ -76,8 +79,8 @@ export default function RegionFilter() {
               <span className="region-count">выбрано: <b>{selectedRegions.length}</b></span>
             </div>
             <div className="region-list">
-              {filtered.map((region, idx) => (
-                <label key={idx} className={`region-item ${selectedRegions.includes(region) ? 'checked' : ''}`}>
+              {filtered.map((region) => (
+                <label key={region} className={`region-item ${selectedRegions.includes(region) ? 'checked' : ''}`}>
                   <span className="cbx">
                     <input type="checkbox" checked={selectedRegions.includes(region)} onChange={() => handleSelect(region)} style={{ display: 'none' }}/>
                     {selectedRegions.includes(region) && <svg width="9" height="9" viewBox="0 0 11 11"><path d="M1 5.5L4 8.5L10 2" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}

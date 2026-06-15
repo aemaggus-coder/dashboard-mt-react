@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../hooks/useStore';
 import { BASE } from '../lib/constants';
-
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+import { fmt } from '../lib/formatters';
 
 const riskRegions = [
-  { name: 'Липецкая область', reason: 'рост обращений', value: '+4.8%' },
-  { name: 'Архангельская область', reason: 'сроки МСЭ', value: '24.6 дн.' },
-  { name: 'Донецкая НР', reason: 'обеспечение ТСР', value: '68%' },
-  { name: 'Красноярский край', reason: 'нагрузка бюро', value: '+7.1%' },
-  { name: 'Волгоградская область', reason: 'ожидание выдачи', value: '15%' },
+  { name: 'Липецкая область',       reason: 'рост обжалований',   value: '+4.8%'   },
+  { name: 'Архангельская область',  reason: 'сроки МСЭ',          value: '24.6 дн.' },
+  { name: 'Донецкая НР',            reason: 'обеспечение ТСР',    value: '68%'     },
+  { name: 'Красноярский край',      reason: 'нагрузка бюро',      value: '+7.1%'   },
+  { name: 'Волгоградская область',  reason: 'ожидание выдачи',    value: '15%'     },
+  { name: 'Кемеровская область',    reason: 'первичная инвал.',    value: '+3.2%'   },
+  { name: 'Саратовская область',    reason: 'сроки МСЭ',          value: '27.1 дн.' },
+  { name: 'Иркутская область',      reason: 'обеспечение ТСР',    value: '71%'     },
+  { name: 'Ставропольский край',    reason: 'нагрузка бюро',      value: '+5.4%'   },
+  { name: 'Оренбургская область',   reason: 'рост обжалований',   value: '+3.9%'   },
 ];
 
 const riskBadgeColors = [
@@ -18,6 +22,11 @@ const riskBadgeColors = [
   { bg: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
   { bg: '#eab308', shadow: 'rgba(234,179,8,0.30)' },
   { bg: '#84cc16', shadow: 'rgba(132,204,22,0.25)' },
+  { bg: '#ef4444', shadow: 'rgba(239,68,68,0.38)' },
+  { bg: '#f97316', shadow: 'rgba(249,115,22,0.34)' },
+  { bg: '#f59e0b', shadow: 'rgba(245,158,11,0.28)' },
+  { bg: '#eab308', shadow: 'rgba(234,179,8,0.24)' },
+  { bg: '#84cc16', shadow: 'rgba(132,204,22,0.20)' },
 ];
 
 const decisions = [
@@ -53,7 +62,7 @@ export default function MinisterSummary() {
         <div className="minister-panel-head">
           <div>
             <div className="minister-label">Сводка для руководителя</div>
-            <h2>Ситуация стабильная, контроль требуется по 3 направлениям</h2>
+            <h2>Ситуация стабильная, контроль требуется по 4 направлениям</h2>
           </div>
           <div className="minister-status ok">
             <span className="minister-status-dot" />

@@ -1,8 +1,8 @@
 import { useSF } from '../hooks/useSF';
 import { BASE } from '../lib/constants';
+import { fmt } from '../lib/formatters';
 
 const NOSO_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
 
 export default function NosoList() {
   const f = useSF();

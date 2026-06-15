@@ -2,8 +2,7 @@ import { useStore } from '../hooks/useStore';
 import { useScaledData } from '../hooks/useScaledData';
 import { useAnimatedDecimal } from '../hooks/useAnimatedNumber';
 import { BASE } from '../lib/constants';
-
-const fmt1 = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+import { fmt1 } from '../lib/formatters';
 
 const R = 80;
 const CX = 110;

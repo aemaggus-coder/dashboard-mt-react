@@ -1,17 +1,42 @@
 import { useStore } from '../hooks/useStore';
 import { useScaledData } from '../hooks/useScaledData';
 import { BASE } from '../lib/constants';
+import { fmt, fmt1 } from '../lib/formatters';
 
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
-const fmt1 = (n) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const ISSUE_MODES = {
+  all: { key: 'all', label: 'Всего', className: 'col-total' },
+  cert: { key: 'cert', label: 'Сертификат', className: 'col-cert' },
+  nat: { key: 'nat', label: 'Натуральное', className: 'col-nat' },
+};
+
+const isAbsorbentGroup = (name) => name.toLowerCase().includes('абсорбирующее бель');
+
+function getModeValues(group, mode) {
+  const rawTotal = (group.nat + group.cert) || 1;
+  if (mode === 'all') {
+    const people = group.people;
+    return {
+      people,
+      count: isAbsorbentGroup(group.name) ? people * 500 : Math.max(rawTotal, people),
+      sum: group.sum,
+    };
+  }
+
+  const rawCount = group[mode] || 0;
+  const share = rawCount / rawTotal;
+  const people = Math.round(group.people * share);
+  return {
+    people,
+    count: isAbsorbentGroup(group.name) ? people * 500 : Math.max(rawCount, people),
+    sum: group.sum * share,
+  };
+}
 
 export default function GroupsTable() {
   const { period, issueMode, setIssueMode } = useStore();
   const tsrData = useScaledData(BASE.tsr[period] || BASE.tsr.today, ['groups']);
   const groups = tsrData.groups;
-  const issueCfg = issueMode === 'nat'
-    ? { key: 'nat', className: 'col-nat' }
-    : { key: 'cert', className: 'col-cert' };
+  const issueCfg = ISSUE_MODES[issueMode] || ISSUE_MODES.all;
 
   return (
     <div className="tsr-wrap">
@@ -21,23 +46,20 @@ export default function GroupsTable() {
             <th>Группа ТСР</th>
             <th>Получателей</th>
             <th className={`${issueCfg.className} tsr-sub-head tsr-issued-cell`}>
-              <div className="tsr-head-toggle" role="group" aria-label="Тип выдачи ТСР">
-                <button
-                  className={`tsr-head-toggle-btn ${issueMode === 'nat' ? 'active' : ''}`}
-                  onClick={() => setIssueMode('nat')}
-                  type="button"
-                >
-                  <span className="tsr-sq tsr-sq-fill"></span>
-                  Натуральные
-                </button>
-                <button
-                  className={`tsr-head-toggle-btn ${issueMode === 'cert' ? 'active' : ''}`}
-                  onClick={() => setIssueMode('cert')}
-                  type="button"
-                >
-                  <span className="tsr-sq tsr-sq-half"></span>
-                  Сертификат
-                </button>
+              <div className="tsr-head-stack">
+                <span className="tsr-head-label">Кол-во ТСР</span>
+                <div className="tsr-head-toggle" role="group" aria-label="Тип выдачи ТСР">
+                  {Object.values(ISSUE_MODES).map((mode) => (
+                    <button
+                      key={mode.key}
+                      className={`tsr-head-toggle-btn ${issueCfg.key === mode.key ? 'active' : ''}`}
+                      onClick={() => setIssueMode(mode.key)}
+                      type="button"
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </th>
             <th className="col-sum">Сумма (млн ₽)</th>
@@ -45,16 +67,13 @@ export default function GroupsTable() {
         </thead>
         <tbody>
           {groups.map((g, idx) => {
-            const total = (g.nat + g.cert) || 1;
-            const modeSum = issueMode === 'nat'
-              ? g.sum * g.nat / total
-              : g.sum * g.cert / total;
+            const modeValues = getModeValues(g, issueCfg.key);
             return (
-              <tr key={idx}>
+              <tr key={g.name}>
                 <td>{g.name}</td>
-                <td className="col-people">{fmt(g.people)}</td>
-                <td className={issueCfg.className}>{fmt(g[issueCfg.key])}</td>
-                <td className="col-sum">{fmt1(modeSum)}</td>
+                <td className="col-people">{fmt(modeValues.people)}</td>
+                <td className={issueCfg.className}>{fmt(modeValues.count)}</td>
+                <td className="col-sum">{fmt1(modeValues.sum)}</td>
               </tr>
             );
           })}

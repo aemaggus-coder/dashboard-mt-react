@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://d3js.org/topojson.v3.min.js"></script>
+<script defer src="/assets/vendor/d3.v7.min.js"></script>
+<script defer src="/assets/vendor/topojson.v3.min.js"></script>
 <script>
 if (new URLSearchParams(window.location.search).get('embedded') === '1') {
   document.documentElement.classList.add('embedded-map');
@@ -134,7 +134,7 @@ html.embedded-map .topbar{display:none}
 .mbar-foot{flex-shrink:0;padding:9px 13px;border-top:1px solid var(--border)}
 .mleg-row{display:flex;align-items:center;gap:10px}
 .mleg-lbl{font-size:10px;color:var(--text-3);font-weight:600}
-.mleg-bar{flex:1;height:8px;border-radius:999px;background:linear-gradient(to right,#22a34a 0%,#84cc16 25%,#ca8a04 50%,#ea580c 75%,#dc2626 100%)}
+.mleg-bar{flex:1;height:8px;border-radius:999px;background:linear-gradient(to right,rgba(34,197,94,.55) 0%,rgba(132,204,34,.65) 25%,rgba(250,191,36,.75) 50%,rgba(251,146,60,.85) 75%,rgba(255,67,67,.95) 100%)}
 
 .mbar-content{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--bg)}
 .mbar-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg);border-top:1px solid var(--border);flex-shrink:0}
@@ -353,7 +353,7 @@ const REGIONS=[
   {fo:'Уральский ФО',color:'#0ea5e9',list:['Курганская область','Свердловская область','Тюменская область','Челябинская область','Ханты-Мансийский АО — Югра','Ямало-Ненецкий АО']},
   {fo:'Сибирский ФО',color:'#14b8a6',list:['Республика Алтай','Республика Тыва','Республика Хакасия','Алтайский край','Красноярский край','Иркутская область','Кемеровская область','Новосибирская область','Омская область','Томская область']},
   {fo:'Дальневосточный ФО',color:'#6366f1',list:['Республика Бурятия','Республика Саха (Якутия)','Забайкальский край','Камчатский край','Приморский край','Хабаровский край','Амурская область','Магаданская область','Сахалинская область','Еврейская АО','Чукотский АО']},
-  {fo:'Новые субъекты РФ',color:'#ef4444',list:['Донецкая НР','Луганская НР','Запорожская область','Херсонская область']},
+  {fo:'Вне федеральных округов',color:'#ef4444',list:['Донецкая НР','Луганская НР','Запорожская область','Херсонская область']},
 ];
 
 const REGION_GRID={
@@ -463,7 +463,11 @@ let _mbarActiveFo=null,_mbarActiveRegion=null;
 let _mapD3Mode='score';
 let _mapPanelMode='region';
 let _mapMetric='population_total';
+let _mapViewMode='grid';
 let _topoLoadPromise=null;
+let _russiaGeojson=null;
+let _d3PrewarmStarted=false;
+let _d3RenderedKey=null;
 
 const MAP_METRIC_GROUPS=[
   {title:'Общие сведения',items:[
@@ -509,6 +513,7 @@ function metricAggregate(list){
 }
 
 function _mapHeatRgb(t){const s=[[0,[34,197,94]],[.25,[132,204,34]],[.5,[250,191,36]],[.75,[251,146,60]],[1,[255,67,67]]];for(let i=0;i<s.length-1;i++){const[t0,[r0,g0,b0]]=s[i],[t1,[r1,g1,b1]]=s[i+1];if(t<=t1+.001){const p=(t-t0)/(t1-t0);return[~~(r0+(r1-r0)*p),~~(g0+(g1-g0)*p),~~(b0+(b1-b0)*p)];};}return s[s.length-1][1];}
+function _mapHeatColor(t){const[r,g,b]=_mapHeatRgb(t);const a=(0.55+t*0.4).toFixed(2);return'rgba('+r+','+g+','+b+','+a+')';}
 function _mapTileBg(name){const v=_mapRegionVals[name]||0;const t=(v-_mapValMin)/(_mapValMax-_mapValMin||1);const[r,g,b]=_mapHeatRgb(t);const a=(0.55+t*0.4).toFixed(2);return{bg:'rgba('+r+','+g+','+b+','+a+')',bdr:'rgba('+r+','+g+','+b+','+(Math.min(1,parseFloat(a)+0.2)).toFixed(2)+')',t,r,g,b,a:parseFloat(a)};}
 
 function rebuildMetricValues(){
@@ -544,7 +549,9 @@ function switchMetric(key){
   rebuildMetricValues();
   renderMetricTree();
   renderMapGrid();
+  _d3RenderedKey=null;
   if(qs('.map-view[data-map="d3"]').classList.contains('active'))renderMapD3();
+  else prewarmMapD3();
 }
 
 function buildMapTree(filter){
@@ -553,8 +560,27 @@ function buildMapTree(filter){
   tree.innerHTML=html;tree.querySelectorAll('.mfo-hdr').forEach(el=>{el.addEventListener('click',function(){const node=this.closest('.mfo-node'),fo=node.dataset.fo;const wasOpen=node.classList.contains('open');node.classList.toggle('open',!wasOpen);_mbarActiveFo=(_mbarActiveFo===fo&&wasOpen)?null:fo;_mbarActiveRegion=null;_refreshMapTiles();_syncToStore();_updateMbarStat();});});tree.querySelectorAll('.mreg-row').forEach(el=>{el.addEventListener('click',function(e){e.stopPropagation();const name=this.dataset.name;if(_mbarActiveRegion===name){_mbarActiveRegion=null;_mbarActiveFo=null;}else{_mbarActiveRegion=name;_mbarActiveFo=this.dataset.fo;}buildMapTree('');_refreshMapTiles();_syncToStore();if(_mbarActiveRegion){const tile=qs('.reg-tile[data-name="'+_mbarActiveRegion+'"]');if(tile)tile.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});}_updateMbarStat();});});
 }
 
-function regionKey(name){return String(name||'').toLowerCase().replace(/ё/g,'е').replace(/^г\. /,'').replace(/\s+/g,' ').replace(/\s+обл\.$/,' область').replace(/\s+респ\.$/,' республика').replace('республика северная осетия — алания','республика северная осетия').replace('республика северная осетия - алания','республика северная осетия').trim();}
-function regionMatches(a,b){const ak=regionKey(a),bk=regionKey(b);return ak===bk||ak.includes(bk)||bk.includes(ak);}
+const REGION_NAME_ALIASES={
+  'еврейская ао':'еврейская автономная область',
+  'ненецкий ао':'ненецкий автономный округ',
+  'ханты-мансийский ао':'ханты-мансийский автономный округ - югра',
+  'ханты-мансийский ао - югра':'ханты-мансийский автономный округ - югра',
+  'ханты-мансийский автономный округ':'ханты-мансийский автономный округ - югра',
+  'хмао - югра':'ханты-мансийский автономный округ - югра',
+  'ямало-ненецкий ао':'ямало-ненецкий автономный округ',
+  'янао':'ямало-ненецкий автономный округ',
+  'чукотский ао':'чукотский автономный округ',
+  'донецкая нр':'донецкая народная республика',
+  'луганская нр':'луганская народная республика',
+  'кемеровская область - кузбасс':'кемеровская область',
+  'чувашская республика - чувашия':'чувашская республика',
+  'республика северная осетия - алания':'республика северная осетия'
+};
+function regionKey(name){
+  const base=String(name||'').toLowerCase().replace(/ё/g,'е').replace(/[—–]/g,'-').replace(/^г\. /,'').replace(/^город /,'').replace(/\s+/g,' ').replace(/\s+обл\.$/,' область').replace(/\s+респ\.$/,' республика').trim();
+  return REGION_NAME_ALIASES[base]||base;
+}
+function regionMatches(a,b){return regionKey(a)===regionKey(b);}
 function regionGroupForName(name){return REGIONS.find(group=>group.list.some(region=>regionMatches(region,name)));}
 function regionNameForD3(name){const group=regionGroupForName(name);return group?.list.find(region=>regionMatches(region,name))||name;}
 function isSelectedMapRegion(name){
@@ -698,29 +724,37 @@ function applyTheme(t){
 }
 
 function switchMap(type){
+  _mapViewMode=type==='d3'?'d3':'grid';
   document.querySelectorAll('.map-switcher-btn[data-map]').forEach(btn=>btn.classList.toggle('active',btn.dataset.map===type));
   document.querySelectorAll('.map-view').forEach(map=>{
     const isTarget=map.dataset.map===type;
     map.classList.toggle('active',isTarget);
   });
+  updateLegendVals();
   if(type==='d3'){
     renderMapD3();
     ensureRussiaTopo().then((loaded)=>{
       if(loaded&&qs('.map-view[data-map="d3"]').classList.contains('active'))renderMapD3();
     });
+  }else{
+    prewarmMapD3();
   }
 }
 
-function _getD3Color(d){
-  const p=d.properties;
-  const val=p[_mapD3Mode]||0;
+function _getD3ModeConfig(){
   const modes={
     'score':{domain:[40,60,75],range:['rgba(34,197,94,0.7)','rgba(59,130,246,0.7)','rgba(251,146,60,0.7)','rgba(239,68,68,0.85)']},
     'tsr':{domain:[72,80,87],range:['rgba(239,68,68,0.85)','rgba(251,146,60,0.7)','rgba(59,130,246,0.7)','rgba(34,197,94,0.7)']},
     'budget':{domain:[60,72,82],range:['rgba(239,68,68,0.85)','rgba(251,146,60,0.7)','rgba(59,130,246,0.7)','rgba(34,197,94,0.7)']},
     'overdue':{domain:[5,3,1.5],range:['rgba(239,68,68,0.85)','rgba(251,146,60,0.7)','rgba(59,130,246,0.7)','rgba(34,197,94,0.7)']}
   };
-  const cfg=modes[_mapD3Mode]||modes.score;
+  return modes[_mapD3Mode]||modes.score;
+}
+
+function _getD3Color(d){
+  const p=d.properties;
+  const val=p[_mapD3Mode]||0;
+  const cfg=_getD3ModeConfig();
   const scale=d3.scaleThreshold().domain(cfg.domain).range(cfg.range);
   return scale(val);
 }
@@ -788,14 +822,55 @@ function renderMapD3(){
     return;
   }
   try{
+    const geojson=getRussiaGeojson();
+    if(!geojson)return;
+    const size=getD3RenderSize(container);
+    const renderKey=_mapD3Mode+'|'+size.W+'x'+size.H;
+    if(_d3RenderedKey===renderKey&&qs('#d3Map path')){
+      d3.select('#d3Map').selectAll('path').attr('fill',d=>_getD3Color(d));
+      syncD3Selection();
+      return;
+    }
     container.innerHTML='<div style="display:flex;flex-direction:column;height:100%;padding:0"><div style="flex:1;position:relative;overflow:hidden;border-radius:8px;background:var(--bg);min-height:0"><svg id="d3Map" style="width:100%;height:100%"></svg></div></div>';
-    const svg=qs('#d3Map');const parentContainer=svg.parentElement.parentElement;const W=Math.max(parentContainer.clientWidth-20,600);const H=Math.max(parentContainer.clientHeight-20||500,450);
-    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const g=d3.select('#d3Map').append('g');const geojson=topojson.feature(window.RUSSIA_TOPO,window.RUSSIA_TOPO.objects.default);const projection=d3.geoConicEqualArea().rotate([-105,0]).center([0,65]).parallels([50,75]).fitSize([W,H],geojson);const path=d3.geoPath().projection(projection);
+    const svg=qs('#d3Map');const W=size.W;const H=size.H;
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const g=d3.select('#d3Map').append('g');const projection=d3.geoConicEqualArea().rotate([-105,0]).center([0,65]).parallels([50,75]).fitSize([W,H],geojson);const path=d3.geoPath().projection(projection);
     g.selectAll('path').data(geojson.features).enter().append('path').attr('d',path).attr('fill',d=>_getD3Color(d)).attr('stroke','rgba(255,255,255,.35)').attr('stroke-width',1).style('cursor','pointer').style('transition','all 0.2s ease').on('mouseover',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.8)').attr('stroke-width',2).style('filter','brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,.3))');}).on('mousemove',(e,d)=>{const p=d.properties;const name=p.ru_name||p.name||'—';const tt=qs('#mapTooltip');tt.querySelector('#ttName').textContent=name;tt.querySelector('#ttFo').textContent=activeMetric().name;tt.querySelector('#ttVal').textContent=p[_mapD3Mode]||'—';tt.querySelector('#ttDot').style.background=_getD3Color(d);tt.classList.add('tt-show');placeMapTooltip(tt,e);}).on('mouseout',function(e,d){d3.select(this).attr('stroke','rgba(255,255,255,.08)').attr('stroke-width',0.5).style('filter','none');}).on('mouseleave',()=>{qs('#mapTooltip').classList.remove('tt-show');}).on('click',(e,d)=>{selectRegionFromD3(d.properties.ru_name||d.properties.name||'—');});renderD3ExtraRegions(g,projection);syncD3Selection();
+    _d3RenderedKey=renderKey;
   }catch(err){
     mapIssue('error','Error rendering D3 map',err.message);
     container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-3)"><div style="text-align:center"><p>Ошибка при загрузке карты</p><p style="font-size:12px">'+err.message+'</p></div></div>';
   }
+}
+
+function getD3RenderSize(container){
+  const source=qs('.mbar-content')||container;
+  const W=Math.max((source.clientWidth||container.clientWidth||620)-20,600);
+  const H=Math.max((source.clientHeight||container.clientHeight||470)-20,450);
+  return{W,H};
+}
+
+function getRussiaGeojson(){
+  if(_russiaGeojson)return _russiaGeojson;
+  if(!window.topojson||!window.RUSSIA_TOPO)return null;
+  _russiaGeojson=topojson.feature(window.RUSSIA_TOPO,window.RUSSIA_TOPO.objects.default);
+  return _russiaGeojson;
+}
+
+function runWhenIdle(fn){
+  if(window.requestIdleCallback)window.requestIdleCallback(fn,{timeout:1800});
+  else setTimeout(fn,250);
+}
+
+function prewarmMapD3(){
+  if(_d3PrewarmStarted)return;
+  _d3PrewarmStarted=true;
+  ensureRussiaTopo().then((loaded)=>{
+    if(!loaded)return;
+    runWhenIdle(()=>{
+      if(qs('#d3Map path'))return;
+      renderMapD3();
+    });
+  });
 }
 
 async function loadRussiaTopo(){
@@ -819,12 +894,14 @@ async function loadRussiaTopo(){
     if(endIdx===-1){mapIssue('error','Could not find RUSSIA_TOPO end');return false;}
     const json=txt.substring(startIdx+20,endIdx+1);
     window.RUSSIA_TOPO=JSON.parse(json);
+    _russiaGeojson=null;
     if(!window.RUSSIA_TOPO?.objects?.default?.geometries || !Array.isArray(window.RUSSIA_TOPO.objects.default.geometries)){
       mapIssue('error','Invalid RUSSIA_TOPO structure');return false;
     }
     if(window.RUSSIA_TOPO.objects.default.geometries.length===0){
       mapIssue('error','RUSSIA_TOPO has no geometries');return false;
     }
+    getRussiaGeojson();
     return true;
   }catch(e){
     mapIssue('error','Failed to load RUSSIA_TOPO',e.message);
@@ -854,8 +931,28 @@ function renderRankPanel(){
 
 function updateLegendVals(){
   const mn=qs('#mlegMin'),mx=qs('#mlegMax');
-  if(mn)mn.textContent=metricDisplay(_mapValMin);
-  if(mx)mx.textContent=metricDisplay(_mapValMax);
+  const bar=qs('.mleg-bar');
+  const isD3=_mapViewMode==='d3';
+  if(bar){
+    bar.dataset.mapMode=_mapViewMode;
+    if(isD3){
+      const cfg=_getD3ModeConfig();
+      const maxIdx=Math.max(cfg.range.length-1,1);
+      const stops=cfg.range.map((color,idx)=>color+' '+Math.round((idx/maxIdx)*100)+'%');
+      bar.style.background='linear-gradient(to right,'+stops.join(',')+')';
+    }else{
+      const stops=[0,.25,.5,.75,1].map(t=>_mapHeatColor(t)+' '+Math.round(t*100)+'%');
+      bar.style.background='linear-gradient(to right,'+stops.join(',')+')';
+    }
+  }
+  if(isD3){
+    const cfg=_getD3ModeConfig();
+    if(mn)mn.textContent='≤ '+cfg.domain[0];
+    if(mx)mx.textContent='≥ '+cfg.domain[cfg.domain.length-1];
+  }else{
+    if(mn)mn.textContent=metricDisplay(_mapValMin);
+    if(mx)mx.textContent=metricDisplay(_mapValMax);
+  }
 }
 
 
