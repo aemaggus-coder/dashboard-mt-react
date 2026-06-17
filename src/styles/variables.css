@@ -1,0 +1,95 @@
+:root {
+  --bg: #30313a;
+  --surface: #26385B;
+  --surface-2: #484957;
+  --border: #58596a;
+  --border-s: #747588;
+  --text: #f2f2f7;
+  --text-2: #d1d1d6;
+  --text-3: #b0b1be;
+  --blue: #2563eb;
+  --blue-l: #60a5fa;
+  --blue-p: #1c2a4a;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --font-ui:      'Inter Variable', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Manrope Variable', 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --mono:         'Roboto Mono', 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+  --r: 12px;
+}
+
+html[data-theme="light"] {
+  --bg: #f1f5f9;
+  --surface: #fff;
+  --surface-2: #f8fafc;
+  --border: #e2e8f0;
+  --border-s: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --blue-p: #dbeafe;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: fadeIn 0.3s ease-in;
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  min-width: 1280px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  font-size: 14px;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Cross-platform button normalize: removes native OS border/bg/shadow
+   and fixes line-height that differs between macOS CoreText,
+   Windows DirectWrite and Linux Freetype. */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color: inherit;
+  line-height: 1;
+}
+
+body.home-page-body {
+  min-width: 0;
+}
+
+body.home-page-body::selection {
+  background: rgba(63, 123, 255, 0.24);
+}
+

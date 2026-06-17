@@ -4,12 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="description" content="Единая среда для мониторинга, анализа и управления социальной сферой Минтруда России." />
+    <meta name="theme-color" content="#0b1430" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Центр мониторинга Минтруда России</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Manrope:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+      .skip-link {
+        position: absolute;
+        top: -100%;
+        left: 8px;
+        z-index: 9999;
+        padding: 8px 16px;
+        background: #2563eb;
+        color: #fff;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 0 0 8px 8px;
+        text-decoration: none;
+        transition: top 0.15s;
+      }
+      .skip-link:focus { top: 0; }
+    </style>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

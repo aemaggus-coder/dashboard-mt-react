@@ -1,0 +1,189 @@
+/* MAP PAGE */
+.map-page-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 1280px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.map-page-topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 60px;
+  padding: 0 28px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  background:
+    linear-gradient(120deg, rgba(34, 197, 148, 0.12) 0%, transparent 32%),
+    linear-gradient(135deg, #0b275e 0%, #1e3a8a 48%, #075985 100%);
+  border-bottom: 1px solid rgba(191, 219, 254, 0.18);
+  box-shadow: 0 14px 38px rgba(2, 8, 23, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.map-page-title {
+  font-family: var(--font-display);
+  flex: 1;
+  text-align: center;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.map-page-back {
+  margin-left: auto;
+}
+
+.map-page-frame-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  background: var(--surface);
+}
+
+.map-page-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--surface);
+}
+
+.map-page-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 800;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(59, 130, 246, 0.14), transparent 34%),
+    var(--surface);
+}
+
+.map-page-loader-ring {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(59, 130, 246, 0.22);
+  border-top-color: #2563eb;
+  animation: mapPageSpin 0.8s linear infinite;
+}
+
+@keyframes mapPageSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+html[data-theme="light"] a.btn-home {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+html[data-theme="light"] a.btn-home:hover {
+  border-color: rgba(255, 255, 255, 0.56);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 4px 14px rgba(20, 50, 120, 0.2);
+}
+
+html[data-theme="light"] .map-page-topbar {
+  background:
+    linear-gradient(120deg, rgba(16, 185, 129, 0.18) 0%, transparent 32%),
+    linear-gradient(135deg, #174ea6 0%, #2563eb 48%, #0ea5e9 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 12px 34px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* MAP BUTTON */
+.map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-right: 12px;
+  text-decoration: none;
+  align-self: center;
+}
+
+.map-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.map-btn.active {
+  border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+
+/* MAP SWITCHER BUTTONS */
+.map-switcher-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+}
+
+.map-switcher-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.map-switcher-btn.active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: #60a5fa;
+  color: #60a5fa;
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+html[data-theme="light"] .map-switcher-btn {
+  color: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme="light"] .map-switcher-btn:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.12);
+  border-color: rgba(15, 23, 42, 0.2);
+}
+
+html[data-theme="light"] .map-switcher-btn.active {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1e40af;
+  border-color: #3b82f6;
+}
+

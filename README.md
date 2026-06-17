@@ -1,16 +1,50 @@
-# React + Vite
+# Центр мониторинга Минтруда России
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Дашборд для мониторинга социальной поддержки отдельных категорий граждан.
 
-Currently, two official plugins are available:
+## Стек
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React 19 · TypeScript · Zustand · React Router v7 · Vite 8 · Chart.js · Sentry
 
-## React Compiler
+## Запуск
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+cp .env.example .env   # заполнить VITE_SENTRY_DSN
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## Команды
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Команда | Описание |
+|---|---|
+| `npm run dev` | Дев-сервер |
+| `npm run build` | Продакшн-билд |
+| `npm test` | Тесты (Vitest) |
+| `npm run test:coverage` | Покрытие тестами |
+| `npm run preview` | Превью продакшн-билда |
+
+## Структура
+
+```
+src/
+  components/     — UI-компоненты
+    blocks/       — детализация по блокам
+  hooks/          — Zustand store, SF, анимации
+  layouts/        — DashboardLayout
+  lib/            — утилиты (storage, formatters, config)
+  pages/          — страницы (Home, Dashboard, Map, NotFound)
+  services/       — API-слой (mockApi → заменить на реальный)
+  styles/         — CSS по секциям
+  tests/          — Vitest тесты
+  types/          — TypeScript типы
+```
+
+## Деплой
+
+Настроен для Netlify (`netlify.toml`). Security headers в `public/_headers`.
+
+Перед деплоем установить переменные окружения:
+- `VITE_SENTRY_DSN` — DSN из sentry.io
+- `VITE_APP_ENV=production`
+- `VITE_APP_VERSION=1.0.0`
