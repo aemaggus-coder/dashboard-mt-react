@@ -12,7 +12,7 @@ import {
 
 const EXAM_FIELDS = ['primary', 'reexam', 'appealMain', 'appealFed', 'terms', 'form', 'result'];
 const TSR_FIELDS  = ['budgetTotal', 'budgetUsed', 'issuedNat', 'issuedCert', 'status', 'groups'];
-const GROUP_FIELDS = ['name', 'nat', 'cert', 'sum', 'people'];
+// const GROUP_FIELDS = ['name', 'nat', 'cert', 'sum', 'people'];
 
 // ── Exam data ────────────────────────────────────────────────────────────────
 

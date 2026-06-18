@@ -1,17 +1,21 @@
 import { useSF } from '../hooks/useSF';
-import { BASE } from '../lib/constants';
+import { useStore } from '../hooks/useStore';
+import { BASE, nosoForSeed } from '../lib/constants';
 import { fmt } from '../lib/formatters';
 
 const NOSO_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
 
 export default function NosoList() {
   const f = useSF();
-  const total = BASE.nosology.reduce((s, n) => s + n.value, 0);
-  const mx = Math.max(...BASE.nosology.map((n) => n.value));
+  const { scope, selectedRegions, selectedFo } = useStore();
+  const seed = scope === 'rf' ? '' : `${scope}::${selectedFo ?? ''}::${selectedRegions.join(',')}`;
+  const nosology = nosoForSeed(seed);
+  const total = nosology.reduce((s, n) => s + n.value, 0);
+  const mx = Math.max(...nosology.map((n) => n.value));
 
   return (
     <div className="noso-list">
-      {BASE.nosology.map((n, i) => {
+      {nosology.map((n, i) => {
         const count = Math.round((BASE.total * f * n.value) / total);
         const pct = Math.round((n.value / total) * 100);
         const barPct = Math.round((n.value / mx) * 100);

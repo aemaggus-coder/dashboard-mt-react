@@ -170,6 +170,58 @@ export function rfactor(regionName: string): number {
   return 0.004 + (h % 260) / 10000;
 }
 
+function strHash(s: string): number {
+  let h = 0;
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h;
+}
+
+export function causesForSeed(seed: string): typeof BASE.causes {
+  if (!seed) return BASE.causes;
+  const h = strHash(seed);
+  const varied = BASE.causes.map((c, i) => {
+    const noise = ((h * (i + 1) * 1013) >>> 0) % 21 - 10; // ±10 pp
+    return { ...c, value: Math.max(2, c.value + noise) };
+  });
+  const total = varied.reduce((s, c) => s + c.value, 0);
+  return varied.map(c => ({ ...c, value: Math.round(c.value * 100 / total) }));
+}
+
+export function nosoForSeed(seed: string): typeof BASE.nosology {
+  if (!seed) return BASE.nosology;
+  const h = strHash(seed);
+  return BASE.nosology.map((n, i) => {
+    const noise = ((h * (i + 1) * 2017) >>> 0) % 31 - 15;
+    return { ...n, value: Math.max(5, n.value + noise) };
+  });
+}
+
+export function employForSeed(seed: string): typeof BASE.employ {
+  if (!seed) return BASE.employ;
+  const h = strHash(seed);
+  const working = BASE.employ.working.map((v, i) => {
+    const noise = ((h * (i + 1) * 3001) >>> 0) % 41 - 20;
+    return Math.max(10, v + noise);
+  });
+  const notWorking = BASE.employ.notWorking.map((v, i) => {
+    const noise = ((h * (i + 7) * 4007) >>> 0) % 41 - 20;
+    return Math.max(10, v + noise);
+  });
+  const okved = BASE.employ.okved.map((item, i) => {
+    const noise = ((h * (i + 3) * 5003) >>> 0) % 9 - 4;
+    return { ...item, share: Math.min(45, Math.max(5, item.share + noise)) };
+  });
+  return { ...BASE.employ, working, notWorking, okved };
+}
+
+export function variedPair(base: [number, number], seed: string): [number, number] {
+  if (!seed) return base;
+  const h = strHash(seed);
+  const delta = (h % 17) - 8; // ±8 pp
+  const a = Math.min(92, Math.max(8, base[0] + delta));
+  return [a, 100 - a];
+}
+
 export function applyScaleToValue(value: unknown, scale: number): unknown {
   if (typeof value !== 'number') return value;
   return Math.round(value * scale);

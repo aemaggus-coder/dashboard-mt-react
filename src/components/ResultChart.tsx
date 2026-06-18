@@ -1,13 +1,16 @@
 import { useStore } from '../hooks/useStore';
-import { BASE } from '../lib/constants';
+import { BASE, variedPair } from '../lib/constants';
 import Donut from './Donut';
 
 const RESULT_COLORS = ['#5f98f5', '#b9aeee'];
 
 export default function ResultChart() {
-  const { period } = useStore();
+  const { period, scope, selectedRegions, selectedFo } = useStore();
   const examData = (BASE.exam as Record<string, typeof BASE.exam.today>)[period] || BASE.exam.ytd;
-  const [established, notEstablished] = examData?.result || [71, 29];
+  const base = (examData?.result || [71, 29]) as [number, number];
+  const seed = scope === 'rf' ? '' : `${scope}::${selectedFo ?? ''}::${selectedRegions.join(',')}`;
+  const chartKey = `${period}::${seed}`;
+  const [established, notEstablished] = variedPair(base, seed);
   const items = [
     { name: 'Установлена инвалидность', value: established, color: RESULT_COLORS[0] },
     { name: 'Не установлена инвалидность', value: notEstablished, color: RESULT_COLORS[1] },
@@ -16,6 +19,7 @@ export default function ResultChart() {
   return (
     <div className="mini-donut-wrap result-mini-donut-wrap">
       <Donut
+        key={chartKey}
         values={items.map((item) => item.value)}
         colors={items.map((item) => item.color)}
         labels={items.map((item) => item.name)}

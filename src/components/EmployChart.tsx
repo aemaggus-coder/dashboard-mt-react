@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useScaledData } from '../hooks/useScaledData';
 import { useSF } from '../hooks/useSF';
-import { BASE } from '../lib/constants';
+import { useStore } from '../hooks/useStore';
+import { BASE, employForSeed } from '../lib/constants';
 import storage from '../lib/storage';
 
 const OKVED_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
@@ -10,10 +11,13 @@ export default function EmployChart() {
   const [hoveredItem, setHoveredItem] = useState<{ group: string; label: string; value: number; idx: number; color: string } | null>(null);
   const [employMode, setEmployMode] = useState(() => storage.get('employ-mode', 'groups'));
   const sf = useSF();
-  const { labels, working, notWorking } = useScaledData(BASE.employ, ['working', 'notWorking']);
+  const { scope, selectedRegions, selectedFo } = useStore();
+  const seed = scope === 'rf' ? '' : `${scope}::${selectedFo ?? ''}::${selectedRegions.join(',')}`;
+  const employData = employForSeed(seed);
+  const { labels, working, notWorking } = useScaledData(employData, ['working', 'notWorking']);
   const maxTotal = Math.max(...labels.map((_, idx) => working[idx] + notWorking[idx]));
   const chartHeight = 196;
-  const okved = BASE.employ.okved.map((item) => ({
+  const okved = employData.okved.map((item) => ({
     ...item,
     count: Math.round(item.value * 1000 * sf),
   }));
