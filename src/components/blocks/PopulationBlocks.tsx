@@ -60,7 +60,8 @@ export function EmployBlock() {
   const groupRows = scaledEmploy.labels.map((label, i) => {
     const w = scaledEmploy.working[i];
     const nw = scaledEmploy.notWorking[i];
-    return { name: label, count: fmt(w * 1000), share: Math.round((w / (w + nw)) * 100) + '%', trend: trendFor(i) };
+    const wSum = (w + nw) || 1;
+    return { name: label, count: fmt(w * 1000), share: Math.round((w / wSum) * 100) + '%', trend: trendFor(i) };
   });
   const okvedRows = BASE.employ.okved.map((item, idx) => ({
     name: item.name,

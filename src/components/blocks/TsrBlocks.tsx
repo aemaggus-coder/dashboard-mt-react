@@ -41,11 +41,11 @@ export function IssuedBlock() {
   const sf = useSF();
   const periodWord = period === 'today' ? 'сегодня' : 'с начала года';
   const d = scale(sf, (BASE.tsr as Record<string, typeof BASE.tsr.today>)[period] || BASE.tsr.ytd, ['issuedNat', 'issuedCert']);
-  const n = d.issuedNat, c = d.issuedCert, total = n + c;
+  const n = d.issuedNat, c = d.issuedCert, total = n + c || 1;
 
   return (
     <div>
-      <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>{fmt(total)}</div>
+      <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>{fmt(n + c)}</div>
       <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>единиц ТСР · {periodWord}</div>
       <DetailTable rows={[
         { name: 'Натуральное', count: fmt(n), share: ((n / total) * 100).toFixed(1) + '%', trend: trendFor(0) },
@@ -61,8 +61,9 @@ export function BudgetBlock() {
   const sf = useSF();
   const periodWord = period === 'today' ? 'сегодня' : 'с начала года';
   const d = scale(sf, (BASE.tsr as Record<string, typeof BASE.tsr.today>)[period] || BASE.tsr.ytd, ['budgetTotal', 'budgetUsed']);
+  const safeTotal = d.budgetTotal || 1;
   const remaining = d.budgetTotal - d.budgetUsed;
-  const bp = ((d.budgetUsed / d.budgetTotal) * 100).toFixed(1);
+  const bp = ((d.budgetUsed / safeTotal) * 100).toFixed(1);
   const col = parseFloat(bp) < 60 ? '#ef4444' : '#10b981';
 
   return (

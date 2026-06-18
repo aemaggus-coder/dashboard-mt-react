@@ -14,11 +14,11 @@ export function PrimaryBlock() {
   const sf = useSF();
   const periodWord = period === 'today' ? 'сегодня' : 'с начала года';
   const d = scale(sf, (BASE.exam as Record<string, typeof BASE.exam.today>)[period] || BASE.exam.ytd, ['primary', 'reexam']);
-  const p = d.primary, r = d.reexam, s = p + r;
+  const p = d.primary, r = d.reexam, s = p + r || 1;
 
   return (
     <div>
-      <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>{fmt(s)}</div>
+      <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text)', margin: '12px 0 2px' }}>{fmt(p + r)}</div>
       <div style={{ fontSize: '13px', color: 'var(--text-3)' }}>освидетельствований · {periodWord}</div>
       <DetailTable rows={[
         { name: 'Первичная', count: fmt(p), share: ((p / s) * 100).toFixed(1) + '%', trend: trendFor(0) },
