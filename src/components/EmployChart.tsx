@@ -15,7 +15,7 @@ export default function EmployChart() {
   const seed = scope === 'rf' ? '' : `${scope}::${selectedFo ?? ''}::${selectedRegions.join(',')}`;
   const employData = employForSeed(seed);
   const { labels, working, notWorking } = useScaledData(employData, ['working', 'notWorking']);
-  const maxTotal = Math.max(...labels.map((_, idx) => working[idx] + notWorking[idx]));
+  const maxTotal = Math.max(...labels.map((_, idx) => working[idx] + notWorking[idx])) || 1;
   const chartHeight = 196;
   const okved = employData.okved.map((item) => ({
     ...item,
@@ -70,8 +70,9 @@ export default function EmployChart() {
             ))}
             {groups.map((group, idx) => {
               const x = 54 + idx * 108;
-              const totalHeight = ((group.workingRaw + group.notWorkingRaw) / maxTotal) * chartHeight;
-              const workingHeight = (group.workingRaw / (group.workingRaw + group.notWorkingRaw)) * totalHeight;
+              const groupSum = group.workingRaw + group.notWorkingRaw;
+              const totalHeight = (groupSum / maxTotal) * chartHeight;
+              const workingHeight = groupSum > 0 ? (group.workingRaw / groupSum) * totalHeight : 0;
               const notWorkingHeight = totalHeight - workingHeight;
               const yTop = 204 - totalHeight;
               const ySplit = 204 - workingHeight;

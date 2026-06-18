@@ -78,7 +78,7 @@ export default function Dashboard() {
       const tsr = BASE.tsr.today;
       const examined  = tickVar((exam.primary + exam.reexam) * f, tick, 0);
       const appealRaw = tickVar((exam.appealMain + exam.appealFed) * f, tick, 1);
-      const appealRate = (appealRaw / examined) * 100;
+      const appealRate = examined > 0 ? (appealRaw / examined) * 100 : 0;
       const budgetPct  = tickVar((tsr.budgetUsed / tsr.budgetTotal) * 100, tick, 2, 0.008);
       data = [
         { label: 'Общий статус', value: 82, decimals: 0, suffix: '%', note: 'система в норме', status: 'ok', trend: makeTrend(82, 80, true) },
@@ -100,7 +100,7 @@ export default function Dashboard() {
       const d     = BASE.exam[period] || BASE.exam.today;
       const tx    = tickVar((d.primary + d.reexam) * f, tick, 0);
       const ap    = tickVar((d.appealMain + d.appealFed) * f, tick, 1);
-      const ar    = ap / tx * 100;
+      const ar    = tx > 0 ? ap / tx * 100 : 0;
       const inval = Math.round(tx * d.result[0] / 100);
       const pp    = PREV_EXAM[period] || PREV_EXAM.today;
       const prevTx     = pp.tx * f;

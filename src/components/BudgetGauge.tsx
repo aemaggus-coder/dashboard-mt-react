@@ -17,10 +17,10 @@ const ptOnArc = (pct, r = R) => {
 export default function BudgetGauge() {
   const { period } = useStore();
   const data = useScaledData((BASE.tsr as Record<string, typeof BASE.tsr.today>)[period] || BASE.tsr.today, ['budgetTotal', 'budgetUsed']);
-  const allocated = data.budgetTotal;
-  const used = data.budgetUsed;
+  const allocated = Math.max(data.budgetTotal, 1);
+  const used = Math.min(data.budgetUsed, allocated);
   const remaining = allocated - used;
-  const percent = (used / allocated) * 100;
+  const percent = Math.min(100, Math.max(0, (used / allocated) * 100));
 
   const pctColor = percent < 40 ? '#ef4444' : percent < 70 ? '#f59e0b' : '#10b981';
 
