@@ -10,7 +10,7 @@ export default function KpiCard({ label, value, note, status = 'ok', decimals = 
   const kpi = { label, value, note, status, decimals, suffix, trend };
 
   const fmt = (n: number): string => {
-    if (typeof n !== 'number' || isNaN(n)) return String(n);
+    if (typeof n !== 'number' || !isFinite(n)) return '—';
     if (decimals > 0) return n.toLocaleString('ru-RU', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     return Math.round(n).toLocaleString('ru-RU');
   };

@@ -20,9 +20,11 @@ export function useAnimatedValue(
     return parseFloat(v.toFixed(decimals));
   };
 
-  const [displayValue, setDisplayValue] = useState<number>(() => round(from));
-  const displayValueRef = useRef<number>(round(from));
-  const startValueRef   = useRef<number>(round(from));
+  const safeTarget = isFinite(targetValue) ? targetValue : 0;
+  const safeFrom   = isFinite(from) ? from : 0;
+  const [displayValue, setDisplayValue] = useState<number>(() => round(safeFrom));
+  const displayValueRef = useRef<number>(round(safeFrom));
+  const startValueRef   = useRef<number>(round(safeFrom));
   const animationRef    = useRef<number | null>(null);
   const startTimeRef    = useRef<number | null>(null);
 
@@ -33,7 +35,7 @@ export function useAnimatedValue(
   useEffect(() => {
     const current = displayValueRef.current;
     const threshold = decimals === undefined ? 0 : decimals === 0 ? 0 : Math.pow(10, -(decimals + 1));
-    if (Math.abs(current - targetValue) <= threshold) return;
+    if (Math.abs(current - safeTarget) <= threshold) return;
 
     startValueRef.current = current;
     startTimeRef.current  = null;
@@ -41,7 +43,7 @@ export function useAnimatedValue(
     const animate = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
       const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
-      const next = round(startValueRef.current + (targetValue - startValueRef.current) * easeInOutQuad(progress));
+      const next = round(startValueRef.current + (safeTarget - startValueRef.current) * easeInOutQuad(progress));
       displayValueRef.current = next;
       setDisplayValue(next);
       if (progress < 1) animationRef.current = requestAnimationFrame(animate);
