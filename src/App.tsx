@@ -37,7 +37,9 @@ function StorageSync() {
         try { useStore.setState({ selectedRegions: JSON.parse(e.newValue || '[]') as string[] }); } catch { /* ignore */ }
       }
       if (e.key === 'mintrud-scope') {
-        useStore.setState({ scope: (e.newValue || 'rf') as Scope });
+        const scope = (e.newValue || 'rf') as Scope;
+        const fo = scope === 'fo' ? (localStorage.getItem('mintrud-fo') ?? null) : useStore.getState().selectedFo;
+        useStore.setState({ scope, selectedFo: fo });
       }
     };
     window.addEventListener('storage', handler);

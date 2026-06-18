@@ -90,23 +90,21 @@ export function GroupsBlock() {
 
   return (
     <div>
+      <div className="tsr-toggle-row">
+        <div className="tsr-head-toggle" role="group" aria-label="Тип выдачи ТСР">
+          {Object.values(ISSUE_MODES).map((mode) => (
+            <button key={mode.key} type="button" className={`tsr-head-toggle-btn ${issueCfg.key === mode.key ? 'active' : ''}`} onClick={() => setIssueMode(mode.key as import("../../types").IssueMode)}>
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <table className="tsr-table detail-tsr-table">
         <thead>
           <tr>
             <th>Группа ТСР</th>
             <th>Получателей</th>
-            <th className={`${issueCfg.className} tsr-sub-head tsr-issued-cell`}>
-              <div className="tsr-head-stack">
-                <span className="tsr-head-label">Кол-во ТСР</span>
-                <div className="tsr-head-toggle" role="group" aria-label="Тип выдачи ТСР">
-                  {Object.values(ISSUE_MODES).map((mode) => (
-                    <button key={mode.key} type="button" className={`tsr-head-toggle-btn ${issueCfg.key === mode.key ? 'active' : ''}`} onClick={() => setIssueMode(mode.key as import("../../types").IssueMode)}>
-                      {mode.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </th>
+            <th className={`${issueCfg.className} tsr-issued-cell`}>Кол-во ТСР</th>
             <th className="col-sum">Сумма (млн ₽)</th>
           </tr>
         </thead>
