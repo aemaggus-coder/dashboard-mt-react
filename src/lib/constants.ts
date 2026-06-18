@@ -222,30 +222,37 @@ export function variedPair(base: [number, number], seed: string): [number, numbe
   return [a, 100 - a];
 }
 
-export function applyScaleToValue(value: unknown, scale: number): unknown {
+function applyScaleToValue(value: unknown, sf: number): unknown {
   if (typeof value !== 'number') return value;
-  return Math.round(value * scale);
+  return Math.round(value * sf);
 }
 
-export function applyScaleToArray(arr: unknown[], scale: number): unknown[] {
+function applyScaleToArray(arr: unknown[], sf: number): unknown[] {
   if (!Array.isArray(arr)) return arr;
-  return arr.map(v => applyScaleToValue(v, scale));
+  return arr.map(v => applyScaleToValue(v, sf));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function applyScaleToObject(obj: Record<string, any>, scale: number, keys: string[] = []): Record<string, any> {
+export function applyScaleToObject(obj: Record<string, any>, sf: number, keys: string[] = []): Record<string, any> {
   const result: Record<string, any> = { ...obj };
   const allKeys = keys.length > 0 ? keys : Object.keys(obj);
   allKeys.forEach(key => {
     if (Array.isArray(obj[key])) {
       if (obj[key].length > 0 && typeof obj[key][0] === 'object') {
-        result[key] = obj[key].map((item: Record<string, any>) => applyScaleToObject(item, scale));
+        result[key] = obj[key].map((item: Record<string, any>) => applyScaleToObject(item, sf));
       } else {
-        result[key] = applyScaleToArray(obj[key] as unknown[], scale);
+        result[key] = applyScaleToArray(obj[key] as unknown[], sf);
       }
     } else if (typeof obj[key] === 'number') {
-      result[key] = applyScaleToValue(obj[key], scale);
+      result[key] = applyScaleToValue(obj[key], sf);
     }
   });
   return result;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function scale(sf: number, data: Record<string, any>, keys: string[] = []): Record<string, any> {
+  if (sf === 1) return data;
+  if (Array.isArray(data)) return (data as Record<string, any>[]).map(item => applyScaleToObject(item, sf, keys));
+  return applyScaleToObject(data, sf, keys);
 }

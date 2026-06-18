@@ -1,13 +1,8 @@
 import { useStore } from '../../hooks/useStore';
 import { useSF } from '../../hooks/useSF';
-import { BASE, applyScaleToObject } from '../../lib/constants';
+import { BASE, scale } from '../../lib/constants';
 import { fmt, fmt1 } from '../../lib/formatters';
 import DetailTable, { trendFor } from './DetailTable';
-
-function scale(sf: number, data: Record<string, any>, keys: string[] = []): Record<string, any> {
-  if (sf === 1) return data;
-  return applyScaleToObject(data, sf, keys);
-}
 
 const ISSUE_MODES = {
   all: { key: 'all', label: 'Всего', className: 'col-total' },

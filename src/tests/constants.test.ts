@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rfactor, applyScaleToValue, applyScaleToArray, applyScaleToObject, REGIONS, ALL_REGIONS } from '../lib/constants';
+import { rfactor, applyScaleToObject, scale, REGIONS, ALL_REGIONS } from '../lib/constants';
 
 describe('rfactor', () => {
   it('returns a value in expected range [0.004, 0.03]', () => {
@@ -17,19 +17,21 @@ describe('rfactor', () => {
   });
 });
 
-describe('applyScaleToValue', () => {
-  it('scales numeric value', () => {
-    expect(applyScaleToValue(1000, 0.5)).toBe(500);
+describe('scale', () => {
+  it('returns data as-is when sf=1', () => {
+    const data = { total: 1000, label: 'test' };
+    expect(scale(1, data)).toBe(data);
   });
 
-  it('returns non-number as-is', () => {
-    expect(applyScaleToValue('text' as unknown as number, 0.5)).toBe('text');
+  it('scales numeric fields', () => {
+    const result = scale(0.5, { total: 1000, label: 'test' });
+    expect(result.total).toBe(500);
+    expect(result.label).toBe('test');
   });
-});
 
-describe('applyScaleToArray', () => {
-  it('scales all values', () => {
-    expect(applyScaleToArray([100, 200, 300], 0.5)).toEqual([50, 100, 150]);
+  it('scales array of numbers via applyScaleToObject', () => {
+    const result = applyScaleToObject({ values: [100, 200, 300] }, 0.5);
+    expect(result.values).toEqual([50, 100, 150]);
   });
 });
 

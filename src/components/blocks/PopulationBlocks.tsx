@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useSF } from '../../hooks/useSF';
-import { BASE, applyScaleToObject } from '../../lib/constants';
+import { BASE, scale } from '../../lib/constants';
 import { fmt } from '../../lib/formatters';
 import storage from '../../lib/storage';
 import DetailTable, { trendFor } from './DetailTable';
-
-function scale(sf: number, data: Record<string, any>, keys: string[] = []): Record<string, any> {
-  if (sf === 1) return data;
-  if (Array.isArray(data)) return data.map(item => applyScaleToObject(item, sf, keys));
-  return applyScaleToObject(data, sf, keys);
-}
 
 export function CausesBlock() {
   const sf = useSF();
